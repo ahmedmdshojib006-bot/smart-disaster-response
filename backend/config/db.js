@@ -6,6 +6,14 @@
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Fix for Windows / local ISPs where Node.js querySrv fails on MongoDB Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // Ignore fallback if custom DNS setting is restricted
+}
 
 // Load environment variables from the .env file into process.env
 dotenv.config();
@@ -19,8 +27,16 @@ dotenv.config();
  */
 const connectDB = async () => {
   try {
+    const mongoUri = process.env.MONGO_URI;
+
+    if (!mongoUri) {
+      throw new Error(
+        'MONGO_URI is missing in backend/.env. Please add your MongoDB Atlas connection string (or local mongodb://localhost:27017/disaster-response) into backend/.env'
+      );
+    }
+
     // mongoose.connect returns a promise; we await it so errors are catchable
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(mongoUri);
 
     // Log which host Mongoose connected to (helpful for debugging env issues)
     console.log(`✅ MongoDB connected: ${conn.connection.host}`);
