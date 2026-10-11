@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/context/SocketContext.jsx — Real-Time Socket.IO Context
 //
 // Manages a single Socket.IO connection for the whole app.
@@ -96,6 +96,10 @@ export function SocketProvider({ children }) {
   const contextValue = {
     socket,    // The Socket.IO instance; use socket.on() / socket.emit()
     connected, // Boolean: true when actively connected
+    // Defensive forwarding helpers:
+    on: (...args) => socket?.on(...args),
+    off: (...args) => socket?.off(...args),
+    emit: (...args) => socket?.emit(...args),
   };
 
   return (

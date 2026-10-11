@@ -13,7 +13,7 @@ function SOSRequestList({ refreshTrigger }) {
   const [error, setError] = useState('');
   const [activePhotoModal, setActivePhotoModal] = useState(null);
 
-  const socket = useSocket();
+  const { socket } = useSocket();
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const fetchMySOS = async () => {
