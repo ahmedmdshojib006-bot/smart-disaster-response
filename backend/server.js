@@ -20,12 +20,14 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');           // Node's built-in HTTP module
 const cors = require('cors');
+const path = require('path');
 const { Server } = require('socket.io');
 
 // Internal modules
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const sosRoutes = require('./routes/sosRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 // ── Create the Express application ───────────────────────────────────────────
@@ -66,6 +68,9 @@ app.use(express.json());
 // Parse URL-encoded bodies (e.g. from HTML form submissions)
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded photos (SOS evidence/damage pictures)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ── API Routes ────────────────────────────────────────────────────────────────
 
 // Authentication: register, login, me, logout
@@ -73,6 +78,9 @@ app.use('/api/auth', authRoutes);
 
 // Notifications: list, mark-read, mark-all-read
 app.use('/api/notifications', notificationRoutes);
+
+// Emergency SOS / Help Requests (Member-2)
+app.use('/api/sos', sosRoutes);
 
 // ── Health check endpoint ─────────────────────────────────────────────────────
 // Useful for uptime monitors, container orchestrators (Kubernetes liveness probes),
