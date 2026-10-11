@@ -45,8 +45,10 @@ const httpServer = http.createServer(app);
 // or any other local port, as well as the configured CLIENT_ORIGIN.
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // allow curl, Postman, server-to-server requests
+  if (process.env.CLIENT_ORIGIN === '*' || !process.env.CLIENT_ORIGIN) return true;
   const allowed = [process.env.CLIENT_ORIGIN, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   if (allowed.includes(origin)) return true;
+  if (origin.endsWith('.vercel.app')) return true; // allow all Vercel deployments
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 };
 

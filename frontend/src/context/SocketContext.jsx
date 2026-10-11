@@ -41,7 +41,11 @@ export function SocketProvider({ children }) {
       // Create a new Socket.IO client connection.
       // We send the JWT token in the auth object so the server can verify
       // who is connecting via socket middleware.
-      const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
+      const SOCKET_URL =
+        import.meta.env.VITE_SOCKET_URL ||
+        (import.meta.env.PROD ? 'https://smart-disaster-response-b2uq.onrender.com' : 'http://localhost:5000');
+
+      const newSocket = io(SOCKET_URL, {
         auth: {
           token, // Server reads this in socket.handshake.auth.token
         },

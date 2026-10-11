@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/api/axiosInstance.js — Shared Axios HTTP Client
 //
 // Instead of calling axios.get(...) directly in every component,
@@ -11,8 +11,12 @@ import axios from 'axios';
 // Create an axios instance pre-configured with our backend's base URL.
 // VITE_API_URL comes from the .env file (e.g. http://localhost:5000).
 // If the env variable is missing, fall back to localhost:5000.
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? 'https://smart-disaster-response-b2uq.onrender.com' : 'http://localhost:5000');
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
