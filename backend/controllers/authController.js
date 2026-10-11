@@ -80,7 +80,7 @@ const register = [
         });
       }
 
-      const { name, email, password, role } = req.body;
+      const { name, email, password, role, skills, availability, serviceArea, phone } = req.body;
 
       // ── Check for duplicate email ────────────────────────────────────────
       // MongoDB unique index would also catch this, but we want a friendly
@@ -96,12 +96,30 @@ const register = [
       // ── Create the user ──────────────────────────────────────────────────
       // We assign the plain-text password to `passwordHash`.
       // The pre-save hook in User.js will hash it before writing to MongoDB.
-      const user = new User({
+      const userData = {
         name,
         email,
         passwordHash: password, // will be hashed by the pre-save hook
         role: role || 'Citizen',  // default to Citizen if role not provided
-      });
+      };
+
+      if (Array.isArray(skills)) {
+        userData.skills = skills;
+      } else if (typeof skills === 'string' && skills.trim()) {
+        userData.skills = skills.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+
+      if (availability) {
+        userData.availability = availability;
+      }
+      if (serviceArea) {
+        userData.serviceArea = serviceArea;
+      }
+      if (phone) {
+        userData.phone = phone;
+      }
+
+      const user = new User(userData);
 
       await user.save(); // triggers the pre-save bcrypt hook
 
@@ -117,6 +135,10 @@ const register = [
           name: user.name,
           email: user.email,
           role: user.role,
+          skills: user.skills || [],
+          availability: user.availability || 'Available',
+          serviceArea: user.serviceArea || '',
+          phone: user.phone || '',
         },
       });
     } catch (error) {
@@ -183,6 +205,10 @@ const login = [
           name: user.name,
           email: user.email,
           role: user.role,
+          skills: user.skills || [],
+          availability: user.availability || 'Available',
+          serviceArea: user.serviceArea || '',
+          phone: user.phone || '',
         },
       });
     } catch (error) {
