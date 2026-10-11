@@ -1,0 +1,459 @@
+/* ==============================================================
+   src/styles/sos.css — SOS & Emergency Request Styles (Member-2)
+   ============================================================== */
+
+/* ── Urgent Alert Banner ─────────────────────────────────────── */
+.sos-emergency-banner {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  color: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.3);
+}
+
+.sos-emergency-banner-text h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sos-emergency-banner-text p {
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+.sos-emergency-btn-trigger {
+  background: white;
+  color: #b71c1c;
+  border: none;
+  border-radius: 8px;
+  padding: 0.85rem 1.8rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sos-emergency-btn-trigger:hover {
+  background: #ffebee;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* ── SOS Form Container ──────────────────────────────────────── */
+.sos-form-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  border-top: 4px solid #d32f2f;
+}
+
+.sos-form-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.sos-form-header h2 {
+  font-size: 1.4rem;
+  color: #b71c1c;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sos-form-header p {
+  color: #666;
+  font-size: 0.92rem;
+  margin-top: 0.3rem;
+}
+
+/* ── Form Field Groups ───────────────────────────────────────── */
+.sos-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.sos-form-group label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.sos-form-group label .required-star {
+  color: #d32f2f;
+  margin-left: 0.2rem;
+}
+
+/* ── GPS Location Controls ───────────────────────────────────── */
+.gps-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+
+.gps-detect-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.gps-btn {
+  background: #1a237e;
+  color: white;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.2s;
+}
+
+.gps-btn:hover:not(:disabled) {
+  background: #283593;
+}
+
+.gps-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.gps-status-indicator {
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gps-status-indicator.success {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.gps-status-indicator.error {
+  color: #c62828;
+}
+
+.gps-coords-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .gps-coords-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gps-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.gps-input:focus {
+  border-color: #1a237e;
+  outline: none;
+}
+
+/* ── Needs Selection Grid ────────────────────────────────────── */
+.needs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.8rem;
+}
+
+.need-card-btn {
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 10px;
+  padding: 1rem 0.8rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.need-card-btn:hover {
+  border-color: #ffb4a2;
+  background: #fffafa;
+}
+
+.need-card-btn.selected {
+  border-color: #d32f2f;
+  background: #ffebee;
+  color: #b71c1c;
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.15);
+}
+
+.need-icon {
+  font-size: 1.8rem;
+}
+
+.need-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ── Number of People Counter ────────────────────────────────── */
+.counter-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.counter-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.counter-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.counter-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.counter-input {
+  width: 80px;
+  height: 42px;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+/* ── Photo Upload Area ───────────────────────────────────────── */
+.photo-upload-container {
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  background: #fafafa;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.photo-upload-container:hover {
+  border-color: #1a237e;
+}
+
+.photo-preview-box {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.8rem;
+}
+
+.photo-preview-img {
+  max-width: 220px;
+  max-height: 180px;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.photo-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ── SOS Submit Button ───────────────────────────────────────── */
+.sos-submit-btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 14px rgba(211, 47, 47, 0.35);
+  transition: all 0.2s ease;
+}
+
+.sos-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b71c1c, #9a0007);
+  box-shadow: 0 6px 18px rgba(211, 47, 47, 0.45);
+  transform: translateY(-1px);
+}
+
+.sos-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── SOS Requests List & Tracking Cards ──────────────────────── */
+.sos-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.sos-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09);
+}
+
+.sos-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.sos-status-pill {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sos-status-pill.Pending     { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.sos-status-pill.Assigned    { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+.sos-status-pill.InProgress,
+.sos-status-pill.In_Progress { background: #f3e5f5; color: #7b1fa2; border: 1px solid #ce93d8; }
+.sos-status-pill.Completed   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.sos-status-pill.Cancelled   { background: #eceff1; color: #546e7a; border: 1px solid #b0bec5; }
+
+.sos-need-tag {
+  display: inline-block;
+  background: #ffebee;
+  color: #c62828;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+  text-transform: capitalize;
+}
+
+.sos-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.sos-cancel-btn {
+  background: #f8fafc;
+  color: #c62828;
+  border: 1px solid #fca5a5;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sos-cancel-btn:hover {
+  background: #fee2e2;
+}
+
+/* ── Hotlines Card ───────────────────────────────────────────── */
+.hotlines-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.hotlines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.hotline-item {
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.hotline-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #d32f2f;
+  margin-top: 0.2rem;
+}
