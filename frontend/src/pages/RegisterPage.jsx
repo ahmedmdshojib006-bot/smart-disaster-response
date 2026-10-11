@@ -114,7 +114,9 @@ function RegisterPage() {
         (Array.isArray(resData?.errors) ? resData.errors.join(', ') : null) ||
         resData?.message ||
         resData?.error ||
-        'Registration failed. Please try again.';
+        (err.code === 'ERR_NETWORK' || !err.response
+          ? 'Cannot connect to backend server. Make sure the backend server is running on port 5000.'
+          : 'Registration failed. Please try again.');
       setServerError(msg);
     } finally {
       setLoading(false);
