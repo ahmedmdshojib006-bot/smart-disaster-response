@@ -20,12 +20,14 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');           // Node's built-in HTTP module
 const cors = require('cors');
+const path = require('path');
 const { Server } = require('socket.io');
 
 // Internal modules
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const sosRoutes = require('./routes/sosRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const volunteerRoutes = require('./routes/volunteerRoutes');
 const { initSocket } = require('./socket/socketHandler');
@@ -38,14 +40,30 @@ const app = express();
 // the same port rather than needing a separate WebSocket server.
 const httpServer = http.createServer(app);
 
-// ── Attach Socket.IO to the HTTP server ──────────────────────────────────────
-// cors config here mirrors the Express CORS config below so browser clients
-// can connect from the React dev server without being blocked.
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    credentials: true,  // allow cookies / auth headers in the handshake
+// ── CORS Configuration ────────────────────────────────────────────────────────
+// Allows requests from the React dev server, whether running on port 3000, 3001,
+// or any other local port, as well as the configured CLIENT_ORIGIN.
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // allow curl, Postman, server-to-server requests
+  const allowed = [process.env.CLIENT_ORIGIN, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+  if (allowed.includes(origin)) return true;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Blocked by CORS for origin: ${origin}`));
+    }
   },
+  credentials: true,
+};
+
+// ── Attach Socket.IO to the HTTP server ──────────────────────────────────────
+const io = new Server(httpServer, {
+  cors: corsOptions,
 });
 
 // Make `io` available anywhere you have access to the Express app.
@@ -55,18 +73,16 @@ app.set('io', io);
 // ── Global middleware ─────────────────────────────────────────────────────────
 
 // CORS — allows the React frontend to make requests to this backend
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 // Parse incoming JSON request bodies (e.g. from fetch / axios)
 app.use(express.json());
 
 // Parse URL-encoded bodies (e.g. from HTML form submissions)
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded photos (SOS evidence/damage pictures)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 
@@ -75,6 +91,9 @@ app.use('/api/auth', authRoutes);
 
 // Notifications: list, mark-read, mark-all-read
 app.use('/api/notifications', notificationRoutes);
+
+// Emergency SOS / Help Requests (Member-2)
+app.use('/api/sos', sosRoutes);
 
 // Member-3: Volunteer task management and roster/profiles
 app.use('/api/tasks', taskRoutes);
