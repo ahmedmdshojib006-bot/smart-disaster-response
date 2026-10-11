@@ -22,6 +22,8 @@ function LoginPage() {
     password: '',
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
   // loading: true while the API request is in flight
   const [loading, setLoading] = useState(false);
 
@@ -67,8 +69,8 @@ function LoginPage() {
     try {
       // POST credentials to the backend login endpoint
       const response = await axiosInstance.post('/api/auth/login', {
-        email: formData.email,
-        password: formData.password,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password.trim(),
       });
 
       // Expected response shape: { user: {...}, token: 'jwt...' }
@@ -130,16 +132,38 @@ function LoginPage() {
           {/* Password Field */}
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              disabled={loading}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                disabled={loading}
+                style={{ paddingRight: '2.5rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  padding: '4px',
+                  color: '#666',
+                }}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           {/* Submit Button */}
