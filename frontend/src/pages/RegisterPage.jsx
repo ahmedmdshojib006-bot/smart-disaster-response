@@ -27,7 +27,13 @@ function RegisterPage() {
     password: '',
     confirmPassword: '',
     role: '',
+    serviceArea: '',
+    availability: 'Available',
+    phone: '',
   });
+
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [customSkill, setCustomSkill] = useState('');
 
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +43,31 @@ function RegisterPage() {
 
   // serverError: a string for backend-returned errors
   const [serverError, setServerError] = useState(null);
+
+  const AVAILABLE_SKILLS = [
+    'First Aid',
+    'Search & Rescue',
+    'Medical Support',
+    'Food & Water Distribution',
+    'Logistics & Transport',
+    'Shelter Management',
+    'Boat Operations',
+    'Counseling / Mental Health',
+  ];
+
+  const toggleSkill = (skill) => {
+    setSelectedSkills(prev =>
+      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+    );
+  };
+
+  const handleAddCustomSkill = (e) => {
+    e.preventDefault();
+    if (customSkill.trim() && !selectedSkills.includes(customSkill.trim())) {
+      setSelectedSkills(prev => [...prev, customSkill.trim()]);
+      setCustomSkill('');
+    }
+  };
 
   // ── Input Change Handler ─────────────────────────────────────
   const handleChange = (e) => {
@@ -75,6 +106,16 @@ function RegisterPage() {
       newErrors.role = 'Please select a role.';
     }
 
+    // Additional validations for Volunteer role
+    if (formData.role === 'Volunteer') {
+      if (!formData.serviceArea || formData.serviceArea.trim().length < 2) {
+        newErrors.serviceArea = 'Please specify your service area (e.g. Dhaka, Feni, Sylhet).';
+      }
+      if (selectedSkills.length === 0) {
+        newErrors.skills = 'Please select at least one skill or capability.';
+      }
+    }
+
     return newErrors;
   };
 
@@ -93,12 +134,21 @@ function RegisterPage() {
     setServerError(null);
 
     try {
-      const response = await axiosInstance.post('/api/auth/register', {
-        name:     formData.name.trim(),
-        email:    formData.email.trim().toLowerCase(),
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        role:     formData.role,
-      });
+        role: formData.role,
+      };
+
+      if (formData.role === 'Volunteer') {
+        payload.serviceArea = formData.serviceArea.trim();
+        payload.availability = formData.availability;
+        payload.skills = selectedSkills;
+        payload.phone = formData.phone.trim();
+      }
+
+      const response = await axiosInstance.post('/api/auth/register', payload);
 
       // Expected response shape: { user: {...}, token: 'jwt...' }
       const { user, token } = response.data;
@@ -225,6 +275,134 @@ function RegisterPage() {
             </select>
             {errors.role && <p className="field-error">{errors.role}</p>}
           </div>
+
+          {/* Volunteer Specific Fields */}
+          {formData.role === 'Volunteer' && (
+            <div
+              className="volunteer-registration-section"
+              style={{
+                background: '#f8fafc',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '10px',
+                padding: '1.2rem',
+                marginBottom: '1.2rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>🦺</span>
+                <strong style={{ color: '#1e293b', fontSize: '0.95rem' }}>
+                  Volunteer Profile & Capabilities
+                </strong>
+              </div>
+
+              {/* Service Area */}
+              <div className="form-group">
+                <label htmlFor="serviceArea">Service Area / District *</label>
+                <input
+                  type="text"
+                  id="serviceArea"
+                  name="serviceArea"
+                  value={formData.serviceArea}
+                  onChange={handleChange}
+                  placeholder="e.g. Dhaka (Mirpur), Sylhet, Feni"
+                  className={errors.serviceArea ? 'error' : ''}
+                  disabled={loading}
+                />
+                {errors.serviceArea && <p className="field-error">{errors.serviceArea}</p>}
+              </div>
+
+              {/* Availability */}
+              <div className="form-group">
+                <label htmlFor="availability">Availability Status</label>
+                <select
+                  id="availability"
+                  name="availability"
+                  value={formData.availability}
+                  onChange={handleChange}
+                  disabled={loading}
+                >
+                  <option value="Available">🟢 Available (Ready for deployment)</option>
+                  <option value="Busy">🟡 Busy (On active assignment)</option>
+                  <option value="Unavailable">🔴 Unavailable (Off duty)</option>
+                </select>
+              </div>
+
+              {/* Phone */}
+              <div className="form-group">
+                <label htmlFor="phone">Phone / Emergency Contact</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+88017xxxxxxxx"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Skills */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Skills & Capabilities *</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
+                  {AVAILABLE_SKILLS.map(skill => {
+                    const isSelected = selectedSkills.includes(skill);
+                    return (
+                      <button
+                        type="button"
+                        key={skill}
+                        onClick={() => toggleSkill(skill)}
+                        style={{
+                          background: isSelected ? '#1a237e' : '#fff',
+                          color: isSelected ? '#fff' : '#334155',
+                          border: isSelected ? '1px solid #1a237e' : '1px solid #cbd5e1',
+                          borderRadius: '16px',
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          fontWeight: isSelected ? '600' : 'normal',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {isSelected ? '✓ ' : '+ '}{skill}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Custom Skill Input */}
+                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    placeholder="Other skill (e.g. Cooking, Boat driver)"
+                    style={{ fontSize: '0.85rem', padding: '0.5rem' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomSkill(e);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomSkill}
+                    style={{
+                      background: '#e2e8f0',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.5rem 0.8rem',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+                {errors.skills && <p className="field-error">{errors.skills}</p>}
+              </div>
+            </div>
+          )}
 
           {/* Submit */}
           <button

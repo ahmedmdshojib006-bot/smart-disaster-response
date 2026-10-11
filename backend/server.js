@@ -26,6 +26,8 @@ const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const volunteerRoutes = require('./routes/volunteerRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 // ── Create the Express application ───────────────────────────────────────────
@@ -73,6 +75,10 @@ app.use('/api/auth', authRoutes);
 
 // Notifications: list, mark-read, mark-all-read
 app.use('/api/notifications', notificationRoutes);
+
+// Member-3: Volunteer task management and roster/profiles
+app.use('/api/tasks', taskRoutes);
+app.use('/api/volunteers', volunteerRoutes);
 
 // ── Health check endpoint ─────────────────────────────────────────────────────
 // Useful for uptime monitors, container orchestrators (Kubernetes liveness probes),
