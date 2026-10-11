@@ -36,14 +36,30 @@ const app = express();
 // the same port rather than needing a separate WebSocket server.
 const httpServer = http.createServer(app);
 
-// ── Attach Socket.IO to the HTTP server ──────────────────────────────────────
-// cors config here mirrors the Express CORS config below so browser clients
-// can connect from the React dev server without being blocked.
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    credentials: true,  // allow cookies / auth headers in the handshake
+// ── CORS Configuration ────────────────────────────────────────────────────────
+// Allows requests from the React dev server, whether running on port 3000, 3001,
+// or any other local port, as well as the configured CLIENT_ORIGIN.
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // allow curl, Postman, server-to-server requests
+  const allowed = [process.env.CLIENT_ORIGIN, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+  if (allowed.includes(origin)) return true;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Blocked by CORS for origin: ${origin}`));
+    }
   },
+  credentials: true,
+};
+
+// ── Attach Socket.IO to the HTTP server ──────────────────────────────────────
+const io = new Server(httpServer, {
+  cors: corsOptions,
 });
 
 // Make `io` available anywhere you have access to the Express app.
@@ -53,12 +69,7 @@ app.set('io', io);
 // ── Global middleware ─────────────────────────────────────────────────────────
 
 // CORS — allows the React frontend to make requests to this backend
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 // Parse incoming JSON request bodies (e.g. from fetch / axios)
 app.use(express.json());
