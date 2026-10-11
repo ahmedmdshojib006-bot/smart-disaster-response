@@ -6,6 +6,14 @@
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Fix for Windows / local ISPs where Node.js querySrv fails on MongoDB Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // Ignore fallback if custom DNS setting is restricted
+}
 
 // Load environment variables from the .env file into process.env
 dotenv.config();
