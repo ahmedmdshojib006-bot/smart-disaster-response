@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/pages/LoginPage.jsx — User Login Page
 //
 // Presents an email + password form.
@@ -81,11 +81,13 @@ function LoginPage() {
       // to the correct dashboard based on their role.
       navigate('/');
     } catch (err) {
-      // Try to show the server's error message; fall back to a generic one
+      const resData = err.response?.data;
       const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Login failed. Please check your credentials and try again.';
+        resData?.message ||
+        resData?.error ||
+        (err.code === 'ERR_NETWORK' || !err.response
+          ? 'Cannot connect to backend server. Make sure the backend server is running on port 5000.'
+          : 'Login failed. Please check your credentials and try again.');
       setError(msg);
     } finally {
       setLoading(false);
