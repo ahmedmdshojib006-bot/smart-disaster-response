@@ -42,6 +42,31 @@ const userSchema = new mongoose.Schema({
     default: 'Citizen',
   },
 
+  // ── Member-3: Volunteer Profile Fields ──────────────────────────────────────
+  // Applicable primarily when role is 'Volunteer', but kept flexible.
+  skills: {
+    type: [String],
+    default: [],
+  },
+
+  availability: {
+    type: String,
+    enum: ['Available', 'Busy', 'Unavailable'],
+    default: 'Available',
+  },
+
+  serviceArea: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+
+  phone: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+
   // Timestamp recorded when the document is first created
   createdAt: {
     type: Date,

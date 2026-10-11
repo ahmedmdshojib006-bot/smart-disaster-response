@@ -1,4 +1,4 @@
-﻿/* ==============================================================
+/* ==============================================================
    src/styles/auth.css — Shared styles for Login and Register pages
    ============================================================== */
 
@@ -18,8 +18,9 @@
   border-radius: 12px;
   padding: 2.5rem;
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  margin: 1.5rem 0;
 }
 
 /* Centered title + subtitle above the form */

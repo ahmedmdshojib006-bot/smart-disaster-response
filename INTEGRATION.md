@@ -389,3 +389,62 @@ router.get('/tasks', protect, requireRole(['Admin', 'Volunteer']), controller.ge
 |----------|---------|-------------|
 | `VITE_API_URL` | `http://localhost:5000` | Backend API URL |
 | `VITE_SOCKET_URL` | `http://localhost:5000` | Socket.IO URL |
+
+---
+
+## 8. Member-3: Volunteer & Task Management Reference
+
+### 8.1 Volunteer Profile & Registration
+Volunteers can register with their skills, availability, and service area at `/register` or update them in `/dashboard/volunteer`.
+
+**Fields stored in `User` document:**
+- `skills`: `string[]` (e.g. `["First Aid", "Search & Rescue", "Medical Support"]`)
+- `availability`: `'Available' | 'Busy' | 'Unavailable'` (default: `'Available'`)
+- `serviceArea`: `string` (e.g. `"Dhaka (Mirpur)"`, `"Sylhet"`, `"Feni Parshuram"`)
+- `phone`: `string` (emergency contact phone)
+
+#### Endpoints:
+- `GET /api/volunteers` — (Admin, NGO) List registered volunteers with task statistics and filters (`?availability=&serviceArea=&skill=&search=`).
+- `GET /api/volunteers/profile` — (Volunteer) Get logged-in volunteer's profile and task summary counts.
+- `PUT /api/volunteers/profile` — (Volunteer) Update own skills, availability, service area, and phone.
+
+---
+
+### 8.2 Task Lifecycle & State Machine
+Tasks are assigned by Administrators to Volunteers and proceed through a strictly validated 4-step state machine:
+
+```
+[Assigned] ──► [Accepted] ──► [In Progress] ──► [Completed]
+```
+
+- **`Assigned`**: Initial state upon Admin assignment.
+- **`Accepted`**: Volunteer acknowledges and accepts the assignment.
+- **`In Progress`**: Volunteer begins field execution.
+- **`Completed`**: Volunteer finalizes operation with optional completion notes and timestamp.
+
+#### Task Endpoints:
+- `POST /api/tasks` — (Admin) Create and assign task to a volunteer.
+  ```json
+  {
+    "title": "Distribute relief dry food in Ward 4",
+    "description": "Provide 100 food packets to stranded flood victims.",
+    "taskType": "Food Distribution",
+    "priority": "High",
+    "serviceArea": "Feni Parshuram",
+    "assignedTo": "<volunteerUserId>",
+    "dueDate": "2026-10-15"
+  }
+  ```
+- `GET /api/tasks` — (Admin, NGO) List and filter all platform tasks (`?status=&priority=&serviceArea=&assignedTo=`).
+- `GET /api/tasks/my-tasks` — (Volunteer) Fetch tasks assigned to the currently authenticated volunteer (`?status=`).
+- `GET /api/tasks/:id` — (Admin, NGO, Assigned Volunteer) Retrieve detailed task information and complete status history audit log.
+- `PATCH /api/tasks/:id/status` — (Assigned Volunteer, Admin) Advance task lifecycle.
+  ```json
+  {
+    "status": "Accepted", // or "In Progress", "Completed"
+    "notes": "Arrived at location with supplies."
+  }
+  ```
+- `PUT /api/tasks/:id/assign` — (Admin) Reassign task to a different volunteer.
+- `DELETE /api/tasks/:id` — (Admin) Delete / cancel task.
+
