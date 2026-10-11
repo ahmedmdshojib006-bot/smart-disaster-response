@@ -392,9 +392,67 @@ router.get('/tasks', protect, requireRole(['Admin', 'Volunteer']), controller.ge
 
 ---
 
-## 8. Member-3: Volunteer & Task Management Reference
+## 8. Emergency SOS / Help Request Reference (Member-2)
 
-### 8.1 Volunteer Profile & Registration
+> All SOS endpoints require `Authorization: Bearer <token>`.
+
+### POST `/api/sos`
+Submit an emergency distress signal. Supports both `multipart/form-data` (with optional photo file under field `photo`) and `application/json`.
+
+```json
+// Request (JSON or FormData)
+{
+  "latitude": 23.8103,
+  "longitude": 90.4125,
+  "address": "Mirpur-10, Block C, Road 4 (Rooftop)",
+  "needs": ["rescue", "water", "food"],
+  "numberOfPeople": 4,
+  "description": "Ground floor submerged, 4 people trapped including elderly person."
+}
+```
+
+```json
+// Success Response — 201 Created
+{
+  "success": true,
+  "message": "Emergency SOS request submitted successfully. Help is on the way.",
+  "data": {
+    "_id": "670189...",
+    "victim": { "_id": "6650ab...", "name": "Jane Doe", "email": "jane@example.com" },
+    "location": { "latitude": 23.8103, "longitude": 90.4125, "address": "Mirpur-10..." },
+    "needs": ["rescue", "water", "food"],
+    "numberOfPeople": 4,
+    "photoUrl": "/uploads/sos-1728650000000-123456.jpg",
+    "status": "Pending",
+    "priority": "Critical",
+    "createdAt": "2026-10-11T13:30:00.000Z"
+  }
+}
+```
+
+### GET `/api/sos/my`
+Retrieve all SOS requests filed by the authenticated citizen/victim.
+
+### GET `/api/sos`
+Query all SOS requests across the disaster zone. **Roles:** `Admin`, `Volunteer`, `NGO`.
+- Query params: `?status=Pending&need=rescue&priority=Critical`
+
+### PATCH `/api/sos/:id/cancel`
+Cancel an SOS request (Citizen who created it or Admin).
+
+### PATCH `/api/sos/:id/status`
+Update status and assign volunteer. **Roles:** `Admin`, `Volunteer`, `NGO`.
+- Body: `{ "status": "In Progress", "assignedVolunteer": "<userId>", "note": "Team deployed" }`
+
+### Real-Time Socket.IO Events
+- **`sos:created`**: Emitted when a new SOS is created.
+- **`sos:updated`**: Emitted whenever status changes or a volunteer is assigned.
+
+---
+
+## 9. Member-3: Volunteer & Task Management Reference
+
+### 9.1 Volunteer Profile & Registration
 Volunteers can register with their skills, availability, and service area at `/register` or update them in `/dashboard/volunteer`.
 
 **Fields stored in `User` document:**
@@ -410,7 +468,7 @@ Volunteers can register with their skills, availability, and service area at `/r
 
 ---
 
-### 8.2 Task Lifecycle & State Machine
+### 9.2 Task Lifecycle & State Machine
 Tasks are assigned by Administrators to Volunteers and proceed through a strictly validated 4-step state machine:
 
 ```
