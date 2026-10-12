@@ -1,6 +1,4 @@
-﻿// ============================================================
-// src/pages/DashboardDonor.jsx — Donor Dashboard (Placeholder)
-// ============================================================
+
 
 import React from 'react';
 import Navbar from '../components/Navbar.jsx';
@@ -38,17 +36,6 @@ function DashboardDonor() {
             <li>View impact reports and progress updates from NGOs</li>
             <li>Download tax receipts and donation history</li>
           </ul>
-        </div>
-
-        {/* Placeholder Notice */}
-        <div
-          className="dashboard-card"
-          style={{ borderLeft: '4px solid #6a1b9a', background: '#f3e5f5' }}
-        >
-          <p style={{ color: '#6a1b9a', fontWeight: '600', margin: 0 }}>
-            📌 This dashboard is a placeholder — your team will build full features here.
-            Add campaign cards, donation forms, and fund-usage charts.
-          </p>
         </div>
       </div>
     </div>

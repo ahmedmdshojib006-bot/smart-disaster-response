@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/pages/DashboardNGO.jsx — NGO / Organization Dashboard (Placeholder)
 // ============================================================
 
@@ -38,17 +38,6 @@ function DashboardNGO() {
             <li>Create and manage relief campaigns for donor contributions</li>
             <li>Communicate with affected citizens and distribute shelter information</li>
           </ul>
-        </div>
-
-        {/* Placeholder Notice */}
-        <div
-          className="dashboard-card"
-          style={{ borderLeft: '4px solid #1565c0', background: '#e3f2fd' }}
-        >
-          <p style={{ color: '#1565c0', fontWeight: '600', margin: 0 }}>
-            📌 This dashboard is a placeholder — your team will build full features here.
-            Add resource tables, volunteer assignment panels, and campaign forms.
-          </p>
         </div>
       </div>
     </div>
