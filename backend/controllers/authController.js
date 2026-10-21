@@ -9,6 +9,8 @@
 const jwt = require('jsonwebtoken');
 const { validationResult, body } = require('express-validator');
 const User = require('../models/User');
+const PasswordResetToken = require('../models/PasswordResetToken');
+const crypto = require('crypto');
 
 // ── Helper: sign a JWT for a given user id ───────────────────────────────────
 // Centralises token creation so we don't repeat ourselves in register & login.
@@ -248,4 +250,83 @@ const logout = async (req, res) => {
   });
 };
 
-module.exports = { register, login, getMe, logout };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: 'If this email exists, a reset token has been generated.',
+        resetToken: null,
+      });
+    }
+
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    const token = crypto.randomBytes(3).toString('hex').toUpperCase();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await PasswordResetToken.create({
+      userId: user._id,
+      token,
+      expiresAt,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Reset token generated. Use this token to reset your password.',
+      resetToken: token,
+      expiresIn: '15 minutes',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error generating reset token.' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required.' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(422).json({ success: false, message: 'Password must be at least 8 characters.' });
+    }
+
+    const tokenDoc = await PasswordResetToken.findOne({
+      token: token.trim().toUpperCase(),
+      used: false,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!tokenDoc) {
+      return res.status(400).json({ success: false, message: 'Reset token is invalid or has expired.' });
+    }
+
+    const user = await User.findById(tokenDoc.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    user.passwordHash = newPassword;
+    await user.save();
+
+    tokenDoc.used = true;
+    await tokenDoc.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset successful. You can now log in with your new password.',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error resetting password.' });
+  }
+};
+
+module.exports = { register, login, getMe, logout, forgotPassword, resetPassword };

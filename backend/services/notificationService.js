@@ -80,10 +80,7 @@ const sendNotification = async ({ io, type, title, message, recipientUserId, tar
     io.to(`role:${targetRole}`).emit('notification:new', payload);
 
   } else {
-    // Neither a specific user nor a specific role was provided.
-    // As a SAFE DEFAULT we emit only to Admins rather than to all connected users.
-    // If you want a true broadcast, call: io.emit('notification:new', payload)
-    io.to('role:Admin').emit('notification:new', payload);
+    io.emit('notification:new', payload);
   }
 
   // ── Step 4: Return the saved document ─────────────────────────────────────

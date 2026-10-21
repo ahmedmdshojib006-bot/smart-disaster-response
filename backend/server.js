@@ -30,6 +30,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const sosRoutes = require('./routes/sosRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const volunteerRoutes = require('./routes/volunteerRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 // ── Create the Express application ───────────────────────────────────────────
@@ -100,6 +102,8 @@ app.use('/api/sos', sosRoutes);
 // Member-3: Volunteer task management and roster/profiles
 app.use('/api/tasks', taskRoutes);
 app.use('/api/volunteers', volunteerRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ── Health check endpoint ─────────────────────────────────────────────────────
 // Useful for uptime monitors, container orchestrators (Kubernetes liveness probes),

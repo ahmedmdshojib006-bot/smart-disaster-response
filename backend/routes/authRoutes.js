@@ -12,14 +12,14 @@
 const express = require('express');
 const router = express.Router();
 
-const { register, login, getMe, logout } = require('../controllers/authController');
+const { register, login, getMe, logout, forgotPassword, resetPassword } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
-// Public routes — no token required
-router.post('/register', register); // register is an array [validationMiddleware, handler]
-router.post('/login', login);       // login is an array [validationMiddleware, handler]
+router.post('/register', register);
+router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
-// Protected routes — must provide a valid JWT
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
 

@@ -8,6 +8,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
@@ -248,26 +249,64 @@ function DashboardAdmin() {
                 Manage emergency volunteer deployments, task assignments, and monitor real-time lifecycle progression.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => handleOpenCreateModal()}
-              style={{
-                background: '#1a237e',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.75rem 1.3rem',
-                fontSize: '0.95rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: '0 2px 6px rgba(26,35,126,0.3)',
-              }}
-            >
-              ➕ Assign New Task
-            </button>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <Link
+                to="/admin/users"
+                style={{
+                  background: '#f1f5f9',
+                  color: '#1e293b',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                🛡️ Users & Roles
+              </Link>
+              <Link
+                to="/admin/alerts"
+                style={{
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                📡 Broadcast Alert
+              </Link>
+              <button
+                type="button"
+                onClick={() => handleOpenCreateModal()}
+                style={{
+                  background: '#1a237e',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.2rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  boxShadow: '0 2px 6px rgba(26,35,126,0.25)',
+                }}
+              >
+                ➕ Assign Task
+              </button>
+            </div>
           </div>
 
           <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '1.2rem 0' }} />

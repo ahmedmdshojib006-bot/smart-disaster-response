@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/components/Navbar.jsx — Top Navigation Bar
 //
 // Displays the app name, notification bell, user info and
@@ -106,6 +106,20 @@ function Navbar() {
             <span style={styles.roleBadge}>
               {user.role}
             </span>
+
+            <Link
+              to="/profile"
+              style={{
+                ...styles.authLink,
+                fontSize: '0.85rem',
+                padding: '0.35rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+              }}
+            >
+              👤 Profile
+            </Link>
 
             {/* Logout button */}
             <button

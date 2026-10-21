@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/App.jsx — Root Application Component & Route Definitions
 //
 // All client-side routes are defined here using React Router v6.
@@ -35,6 +35,10 @@ import DashboardVolunteer from './pages/DashboardVolunteer.jsx';
 import DashboardNGO     from './pages/DashboardNGO.jsx';
 import DashboardCitizen from './pages/DashboardCitizen.jsx';
 import DashboardDonor   from './pages/DashboardDonor.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import AdminUserManagement from './pages/AdminUserManagement.jsx';
+import AdminAlertSender from './pages/AdminAlertSender.jsx';
 
 // ── PUBLIC ONLY ROUTE ────────────────────────────────────────
 // Wraps Login and Register: if the user is already authenticated,
@@ -168,6 +172,42 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['Donor']}>
             <DashboardDonor />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicOnlyRoute>
+            <ForgotPasswordPage />
+          </PublicOnlyRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminUserManagement />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/alerts"
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminAlertSender />
           </ProtectedRoute>
         }
       />

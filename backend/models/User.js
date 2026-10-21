@@ -67,6 +67,19 @@ const userSchema = new mongoose.Schema({
     default: '',
   },
 
+  address: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: '',
+  },
+
   // Timestamp recorded when the document is first created
   createdAt: {
     type: Date,

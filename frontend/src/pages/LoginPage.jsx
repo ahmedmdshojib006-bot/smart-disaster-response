@@ -164,6 +164,11 @@ function LoginPage() {
                 {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
+            <div style={{ textAlign: 'right', marginTop: '0.4rem' }}>
+              <Link to="/forgot-password" style={{ color: '#1a237e', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 500 }}>
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           {/* Submit Button */}
