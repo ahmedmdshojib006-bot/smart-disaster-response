@@ -1,4 +1,3 @@
-// tests/sos.test.js
 const request = require('supertest');
 const SOSRequest = require('../models/SOSRequest');
 const sosRoutes = require('../routes/sosRoutes');

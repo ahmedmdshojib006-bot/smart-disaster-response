@@ -1,8 +1,3 @@
-// ============================================================
-// src/pages/DashboardCitizen.jsx — Citizen / Victim Dashboard (Member-2)
-// Provides SOS help request submission, GPS tracking, and real-time status.
-// ============================================================
-
 import React, { useState, useRef } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -14,10 +9,15 @@ function DashboardCitizen() {
   const { user } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const formRef = useRef(null);
+  const listRef = useRef(null);
 
   const handleSOSSubmitted = () => {
-    // Increment trigger to reload list
     setRefreshTrigger((prev) => prev + 1);
+    if (listRef.current) {
+      setTimeout(() => {
+        listRef.current.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
   };
 
   const scrollToForm = () => {
@@ -31,7 +31,6 @@ function DashboardCitizen() {
       <Navbar />
 
       <div className="dashboard-content">
-        {/* Urgent Emergency Banner */}
         <div className="sos-emergency-banner">
           <div className="sos-emergency-banner-text">
             <h2>🚨 IN IMMEDIATE DANGER? DISPATCH AN SOS ALERT</h2>
@@ -49,7 +48,6 @@ function DashboardCitizen() {
           </button>
         </div>
 
-        {/* Welcome Card */}
         <div className="dashboard-card">
           <h1 style={{ fontSize: '1.6rem', color: '#1a237e', marginBottom: '0.5rem' }}>
             Welcome, {user?.name}!
@@ -61,17 +59,14 @@ function DashboardCitizen() {
           </p>
         </div>
 
-        {/* SOS Request Form */}
         <div ref={formRef}>
           <SOSRequestForm onSOSSubmitted={handleSOSSubmitted} />
         </div>
 
-        {/* User's Submitted SOS Requests Tracker */}
-        <div className="dashboard-card">
+        <div ref={listRef} className="dashboard-card">
           <SOSRequestList refreshTrigger={refreshTrigger} />
         </div>
 
-        {/* Emergency Hotlines & Guidelines */}
         <div className="dashboard-card hotlines-card">
           <h3 style={{ fontSize: '1.15rem', color: '#1e293b', marginBottom: '0.5rem' }}>
             📞 National Emergency Hotlines (Bangladesh)

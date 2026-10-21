@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -12,7 +10,6 @@ function DashboardDonor() {
       <Navbar />
 
       <div className="dashboard-content">
-        {/* Welcome Card */}
         <div className="dashboard-card">
           <h1 style={{ fontSize: '1.6rem', color: '#1a237e', marginBottom: '0.5rem' }}>
             Welcome, {user?.name}!
@@ -24,7 +21,6 @@ function DashboardDonor() {
           </p>
         </div>
 
-        {/* Responsibilities / Features Card */}
         <div className="dashboard-card">
           <h2 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '1rem' }}>
             💰 What You Can Do Here

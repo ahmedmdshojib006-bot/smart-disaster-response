@@ -1,12 +1,3 @@
-// models/SOSRequest.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema and model for Emergency SOS / Help Requests.
-// Member-2 Responsibility:
-//   Victims can submit an SOS/help request with their GPS location,
-//   type of need (food, water, medicine, rescue), number of people,
-//   and an optional photo.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const VALID_NEEDS = ['food', 'water', 'medicine', 'rescue'];
@@ -15,14 +6,12 @@ const VALID_PRIORITIES = ['Normal', 'High', 'Critical'];
 
 const sosRequestSchema = new mongoose.Schema(
   {
-    // The authenticated user (Citizen/Victim) who raised the SOS
     victim: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Victim ID is required'],
     },
 
-    // Victim's GPS coordinates and optional address/landmark
     location: {
       latitude: {
         type: Number,
@@ -44,7 +33,6 @@ const sosRequestSchema = new mongoose.Schema(
       },
     },
 
-    // Type of emergency assistance required: food, water, medicine, rescue
     needs: {
       type: [
         {
@@ -66,7 +54,6 @@ const sosRequestSchema = new mongoose.Schema(
       required: [true, 'Type of need is required'],
     },
 
-    // Number of people requiring help/relief
     numberOfPeople: {
       type: Number,
       required: [true, 'Number of people is required'],
@@ -74,14 +61,12 @@ const sosRequestSchema = new mongoose.Schema(
       default: 1,
     },
 
-    // Optional photo URL or path (e.g. /uploads/sos-xxx.jpg)
     photoUrl: {
       type: String,
       default: null,
       trim: true,
     },
 
-    // Additional emergency details, health concerns, trapped situation, etc.
     description: {
       type: String,
       trim: true,
@@ -89,28 +74,24 @@ const sosRequestSchema = new mongoose.Schema(
       default: '',
     },
 
-    // Current lifecycle status of the emergency request
     status: {
       type: String,
       enum: VALID_STATUSES,
       default: 'Pending',
     },
 
-    // Priority level calculated or assigned
     priority: {
       type: String,
       enum: VALID_PRIORITIES,
       default: 'High',
     },
 
-    // Assigned Volunteer (integrated with Member-3's volunteer assignment)
     assignedVolunteer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
     },
 
-    // History log of status transitions
     statusHistory: [
       {
         status: { type: String, enum: VALID_STATUSES },
@@ -121,11 +102,10 @@ const sosRequestSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true, // creates createdAt and updatedAt automatically
+    timestamps: true, 
   }
 );
 
-// Indexes for fast geospatial / status queries
 sosRequestSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
 sosRequestSchema.index({ status: 1, createdAt: -1 });
 sosRequestSchema.index({ victim: 1, createdAt: -1 });

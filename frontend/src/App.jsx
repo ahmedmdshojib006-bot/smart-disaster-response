@@ -1,33 +1,10 @@
-// ============================================================
-// src/App.jsx — Root Application Component & Route Definitions
-//
-// All client-side routes are defined here using React Router v6.
-// Authenticated routes are wrapped in <ProtectedRoute> which
-// handles login redirect and role-based access control.
-//
-// Route Summary:
-//   /                  → Redirects to correct dashboard by role
-//   /login             → Login page (redirect away if logged in)
-//   /register          → Register page (redirect away if logged in)
-//   /dashboard/admin   → Admin only
-//   /dashboard/volunteer → Volunteer only
-//   /dashboard/ngo     → NGO only
-//   /dashboard/citizen → Citizen only
-//   /dashboard/donor   → Donor only
-//   /unauthorized      → Shown when role check fails
-//   *                  → 404 Not Found
-// ============================================================
-
 import React from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 
-// Contexts
 import { useAuth } from './context/AuthContext.jsx';
 
-// Route Guards
 import { ProtectedRoute, RoleRedirect } from './components/ProtectedRoute.jsx';
 
-// Pages
 import LoginPage        from './pages/LoginPage.jsx';
 import RegisterPage     from './pages/RegisterPage.jsx';
 import DashboardAdmin   from './pages/DashboardAdmin.jsx';
@@ -40,18 +17,13 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import AdminUserManagement from './pages/AdminUserManagement.jsx';
 import AdminAlertSender from './pages/AdminAlertSender.jsx';
 
-// ── PUBLIC ONLY ROUTE ────────────────────────────────────────
-// Wraps Login and Register: if the user is already authenticated,
-// redirect them to "/" rather than showing the auth forms again.
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
-  // While checking auth, show a loading screen (same as ProtectedRoute)
   if (loading) {
     return <div className="loading-screen"><p>Loading...</p></div>;
   }
 
-  // Already logged in? Go home (RoleRedirect will pick the right dashboard)
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -59,8 +31,6 @@ function PublicOnlyRoute({ children }) {
   return children;
 }
 
-// ── UNAUTHORIZED PAGE ────────────────────────────────────────
-// Shown when a user tries to access a route their role forbids.
 function UnauthorizedPage() {
   return (
     <div className="error-page">
@@ -74,7 +44,6 @@ function UnauthorizedPage() {
   );
 }
 
-// ── 404 NOT FOUND PAGE ───────────────────────────────────────
 function NotFoundPage() {
   return (
     <div className="error-page">
@@ -87,16 +56,9 @@ function NotFoundPage() {
   );
 }
 
-// ── MAIN APP COMPONENT ───────────────────────────────────────
 function App() {
   return (
     <Routes>
-      {/*
-        "/" — The root route.
-        RoleRedirect reads the user's role and navigates them to
-        the correct dashboard (e.g. /dashboard/admin for admins).
-        ProtectedRoute ensures only authenticated users reach it.
-      */}
       <Route
         path="/"
         element={
@@ -106,7 +68,6 @@ function App() {
         }
       />
 
-      {/* ── Authentication Routes (redirect away if already logged in) ── */}
       <Route
         path="/login"
         element={
@@ -124,9 +85,6 @@ function App() {
         }
       />
 
-      {/* ── Role-Protected Dashboard Routes ────────────────────── */}
-
-      {/* Admin dashboard — only users with role "Admin" may enter */}
       <Route
         path="/dashboard/admin"
         element={
@@ -136,7 +94,6 @@ function App() {
         }
       />
 
-      {/* Volunteer dashboard */}
       <Route
         path="/dashboard/volunteer"
         element={
@@ -146,7 +103,6 @@ function App() {
         }
       />
 
-      {/* NGO / Organization dashboard */}
       <Route
         path="/dashboard/ngo"
         element={
@@ -156,7 +112,6 @@ function App() {
         }
       />
 
-      {/* Citizen / Victim dashboard */}
       <Route
         path="/dashboard/citizen"
         element={
@@ -166,7 +121,6 @@ function App() {
         }
       />
 
-      {/* Donor dashboard */}
       <Route
         path="/dashboard/donor"
         element={
@@ -212,12 +166,8 @@ function App() {
         }
       />
 
-      {/* ── Error / Utility Routes ──────────────────────────────── */}
-
-      {/* Unauthorized — shown when role check fails in ProtectedRoute */}
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-      {/* 404 — catch all unmatched paths */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

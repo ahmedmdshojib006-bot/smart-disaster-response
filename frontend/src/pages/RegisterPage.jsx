@@ -1,26 +1,15 @@
-// ============================================================
-// src/pages/RegisterPage.jsx — User Registration Page
-//
-// Multi-field form with client-side field-level validation.
-// Roles available: Volunteer, NGO, Citizen, Donor (no Admin).
-// On success: calls AuthContext.login() and redirects home.
-// ============================================================
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/auth.css';
 
-// Available roles for registration.
-// Admin is intentionally excluded — admins are created server-side only.
 const ROLES = ['Volunteer', 'NGO', 'Citizen', 'Donor'];
 
 function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // ── Form State ───────────────────────────────────────────────
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -37,11 +26,8 @@ function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
 
-  // errors: an object mapping field names to error messages
-  // e.g. { name: 'Name is required', email: 'Invalid email' }
   const [errors, setErrors] = useState({});
 
-  // serverError: a string for backend-returned errors
   const [serverError, setServerError] = useState(null);
 
   const AVAILABLE_SKILLS = [
@@ -69,20 +55,15 @@ function RegisterPage() {
     }
   };
 
-  // ── Input Change Handler ─────────────────────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear the specific field error as user corrects it
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
     if (serverError) setServerError(null);
   };
 
-  // ── Client-Side Validation ───────────────────────────────────
-  // Validates all fields and returns an errors object.
-  // An empty object means all fields are valid.
   const validate = () => {
     const newErrors = {};
 
@@ -106,7 +87,6 @@ function RegisterPage() {
       newErrors.role = 'Please select a role.';
     }
 
-    // Additional validations for Volunteer role
     if (formData.role === 'Volunteer') {
       if (!formData.serviceArea || formData.serviceArea.trim().length < 2) {
         newErrors.serviceArea = 'Please specify your service area (e.g. Dhaka, Feni, Sylhet).';
@@ -119,11 +99,9 @@ function RegisterPage() {
     return newErrors;
   };
 
-  // ── Form Submit Handler ──────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate before sending to backend
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -150,13 +128,10 @@ function RegisterPage() {
 
       const response = await axiosInstance.post('/api/auth/register', payload);
 
-      // Expected response shape: { user: {...}, token: 'jwt...' }
       const { user, token } = response.data;
 
-      // Save user and token to AuthContext
       login(user, token);
 
-      // Redirect — RoleRedirect will send to the right dashboard
       navigate('/');
     } catch (err) {
       const resData = err.response?.data;
@@ -176,13 +151,11 @@ function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        {/* Header */}
         <div className="auth-header">
           <h1>🚨 Join the Platform</h1>
           <p>Create your Disaster Response account</p>
         </div>
 
-        {/* Server-level error banner */}
         {serverError && (
           <div className="server-error" role="alert">
             {serverError}
@@ -190,7 +163,6 @@ function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          {/* Full Name */}
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
             <input
@@ -206,7 +178,6 @@ function RegisterPage() {
             {errors.name && <p className="field-error">{errors.name}</p>}
           </div>
 
-          {/* Email */}
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
@@ -223,7 +194,6 @@ function RegisterPage() {
             {errors.email && <p className="field-error">{errors.email}</p>}
           </div>
 
-          {/* Password */}
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -240,7 +210,6 @@ function RegisterPage() {
             {errors.password && <p className="field-error">{errors.password}</p>}
           </div>
 
-          {/* Confirm Password */}
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
@@ -259,7 +228,6 @@ function RegisterPage() {
             )}
           </div>
 
-          {/* Role Selection */}
           <div className="form-group">
             <label htmlFor="role">I am a...</label>
             <select
@@ -278,7 +246,6 @@ function RegisterPage() {
             {errors.role && <p className="field-error">{errors.role}</p>}
           </div>
 
-          {/* Volunteer Specific Fields */}
           {formData.role === 'Volunteer' && (
             <div
               className="volunteer-registration-section"
@@ -297,7 +264,6 @@ function RegisterPage() {
                 </strong>
               </div>
 
-              {/* Service Area */}
               <div className="form-group">
                 <label htmlFor="serviceArea">Service Area / District *</label>
                 <input
@@ -313,7 +279,6 @@ function RegisterPage() {
                 {errors.serviceArea && <p className="field-error">{errors.serviceArea}</p>}
               </div>
 
-              {/* Availability */}
               <div className="form-group">
                 <label htmlFor="availability">Availability Status</label>
                 <select
@@ -329,7 +294,6 @@ function RegisterPage() {
                 </select>
               </div>
 
-              {/* Phone */}
               <div className="form-group">
                 <label htmlFor="phone">Phone / Emergency Contact</label>
                 <input
@@ -343,7 +307,6 @@ function RegisterPage() {
                 />
               </div>
 
-              {/* Skills */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Skills & Capabilities *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
@@ -371,7 +334,6 @@ function RegisterPage() {
                     );
                   })}
                 </div>
-                {/* Custom Skill Input */}
                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
                   <input
                     type="text"
@@ -406,7 +368,6 @@ function RegisterPage() {
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             className="btn-primary"
@@ -416,7 +377,6 @@ function RegisterPage() {
           </button>
         </form>
 
-        {/* Footer Link */}
         <div className="auth-footer">
           Already have an account?{' '}
           <Link to="/login">Sign in here</Link>

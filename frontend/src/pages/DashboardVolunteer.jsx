@@ -1,10 +1,3 @@
-// ============================================================
-// src/pages/DashboardVolunteer.jsx — Volunteer Dashboard
-//
-// Member-3: Volunteer Profile, Availability & Task Lifecycle Management
-// Lifecycle: Assigned ──► Accepted ──► In Progress ──► Completed
-// ============================================================
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -26,7 +19,6 @@ function DashboardVolunteer() {
   const { user } = useAuth();
   const { socket } = useSocket();
 
-  // ── State ────────────────────────────────────────────────────
   const [profile, setProfile] = useState({
     skills: user?.skills || [],
     availability: user?.availability || 'Available',
@@ -40,7 +32,6 @@ function DashboardVolunteer() {
   const [actionLoading, setActionLoading] = useState({});
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  // Profile Edit Modal State
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [editFormData, setEditFormData] = useState({
     skills: [],
@@ -51,18 +42,14 @@ function DashboardVolunteer() {
   const [customSkillInput, setCustomSkillInput] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
 
-  // Completion Modal State
   const [completingTaskId, setCompletingTaskId] = useState(null);
   const [completionNotes, setCompletionNotes] = useState('');
 
-  // Expanded History for tasks
   const [expandedHistory, setExpandedHistory] = useState({});
 
-  // ── Fetch Profile & Tasks ────────────────────────────────────
   const fetchProfileAndTasks = useCallback(async () => {
     try {
       setLoadingTasks(true);
-      // Fetch fresh profile
       const profRes = await axiosInstance.get('/api/volunteers/profile');
       if (profRes.data?.user) {
         setProfile({
@@ -73,7 +60,6 @@ function DashboardVolunteer() {
         });
       }
 
-      // Fetch tasks
       const taskRes = await axiosInstance.get('/api/tasks/my-tasks');
       if (taskRes.data?.tasks) {
         setTasks(taskRes.data.tasks);
@@ -89,12 +75,10 @@ function DashboardVolunteer() {
     fetchProfileAndTasks();
   }, [fetchProfileAndTasks]);
 
-  // ── Real-time Socket Listener ────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
     const handleNotification = (notif) => {
-      // If notification is about a task, refresh tasks
       if (notif.title?.toLowerCase().includes('task') || notif.type === 'general') {
         fetchProfileAndTasks();
       }
@@ -106,7 +90,6 @@ function DashboardVolunteer() {
     };
   }, [socket, fetchProfileAndTasks]);
 
-  // ── Quick Availability Toggle ────────────────────────────────
   const handleQuickAvailabilityChange = async (newAvailability) => {
     try {
       setActionLoading((prev) => ({ ...prev, availability: true }));
@@ -131,7 +114,6 @@ function DashboardVolunteer() {
     }
   };
 
-  // ── Open Edit Profile Modal ──────────────────────────────────
   const handleOpenEditModal = () => {
     setEditFormData({
       skills: [...profile.skills],
@@ -194,8 +176,6 @@ function DashboardVolunteer() {
     }
   };
 
-  // ── Task Status Workflow Handler ─────────────────────────────
-  // State machine: Assigned ──► Accepted ──► In Progress ──► Completed
   const handleTransitionTask = async (taskId, targetStatus, notes = '') => {
     try {
       setActionLoading((prev) => ({ ...prev, [taskId]: true }));
@@ -235,13 +215,11 @@ function DashboardVolunteer() {
     setExpandedHistory((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
-  // Filtered Tasks
   const filteredTasks = tasks.filter((t) => {
     if (activeTab === 'All') return true;
     return t.status === activeTab;
   });
 
-  // Task Stats Counts
   const counts = {
     total: tasks.length,
     assigned: tasks.filter((t) => t.status === 'Assigned').length,
@@ -255,7 +233,6 @@ function DashboardVolunteer() {
       <Navbar />
 
       <div className="dashboard-content">
-        {/* Feedback Alert */}
         {feedbackMsg && (
           <div
             style={{
@@ -272,7 +249,6 @@ function DashboardVolunteer() {
           </div>
         )}
 
-        {/* Welcome Card & Volunteer Profile */}
         <div className="dashboard-card" style={{ borderTop: '4px solid #2e7d32' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
@@ -307,7 +283,6 @@ function DashboardVolunteer() {
 
           <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '1.2rem 0' }} />
 
-          {/* Profile Details Grid */}
           <div
             style={{
               display: 'grid',
@@ -315,7 +290,6 @@ function DashboardVolunteer() {
               gap: '1.2rem',
             }}
           >
-            {/* Availability Box */}
             <div
               style={{
                 background: '#f8fafc',
@@ -404,7 +378,6 @@ function DashboardVolunteer() {
               </div>
             </div>
 
-            {/* Service Area Box */}
             <div
               style={{
                 background: '#f8fafc',
@@ -424,7 +397,6 @@ function DashboardVolunteer() {
               </div>
             </div>
 
-            {/* Skills Box */}
             <div
               style={{
                 background: '#f8fafc',
@@ -461,7 +433,6 @@ function DashboardVolunteer() {
           </div>
         </div>
 
-        {/* Task Counters Row */}
         <div
           style={{
             display: 'grid',
@@ -492,7 +463,6 @@ function DashboardVolunteer() {
           </div>
         </div>
 
-        {/* Tasks Section Card */}
         <div className="dashboard-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1.2rem' }}>
             <div>
@@ -504,7 +474,6 @@ function DashboardVolunteer() {
               </p>
             </div>
 
-            {/* Filter Tabs */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
               {['All', 'Assigned', 'Accepted', 'In Progress', 'Completed'].map((tab) => (
                 <button
@@ -528,7 +497,6 @@ function DashboardVolunteer() {
             </div>
           </div>
 
-          {/* Tasks List */}
           {loadingTasks ? (
             <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
               Loading tasks...
@@ -572,7 +540,6 @@ function DashboardVolunteer() {
                       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    {/* Header: Title & Badges */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -624,7 +591,6 @@ function DashboardVolunteer() {
                         </div>
                       </div>
 
-                      {/* Current Status Badge */}
                       <span
                         style={{
                           background: isCompleted
@@ -651,12 +617,10 @@ function DashboardVolunteer() {
                       </span>
                     </div>
 
-                    {/* Description */}
                     <p style={{ color: '#334155', fontSize: '0.92rem', margin: '0.8rem 0', lineHeight: 1.5 }}>
                       {task.description}
                     </p>
 
-                    {/* Progress Workflow Stepper */}
                     <div
                       style={{
                         margin: '1rem 0',
@@ -726,7 +690,6 @@ function DashboardVolunteer() {
                       </div>
                     </div>
 
-                    {/* Notes if completed or present */}
                     {task.notes && (
                       <div
                         style={{
@@ -742,7 +705,6 @@ function DashboardVolunteer() {
                       </div>
                     )}
 
-                    {/* Bottom Actions Row */}
                     <div
                       style={{
                         display: 'flex',
@@ -770,7 +732,6 @@ function DashboardVolunteer() {
                         {expandedHistory[task._id] ? 'Hide Audit History' : 'View Audit History'}
                       </button>
 
-                      {/* State Transition Actions */}
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {isAssigned && (
                           <button
@@ -852,7 +813,6 @@ function DashboardVolunteer() {
                       </div>
                     </div>
 
-                    {/* Expandable Audit Trail */}
                     {expandedHistory[task._id] && (
                       <div
                         style={{
@@ -886,7 +846,6 @@ function DashboardVolunteer() {
         </div>
       </div>
 
-      {/* ── EDIT PROFILE MODAL ────────────────────────────────────── */}
       {showEditProfile && (
         <div
           style={{
@@ -923,7 +882,6 @@ function DashboardVolunteer() {
             </p>
 
             <form onSubmit={handleSaveProfile}>
-              {/* Service Area */}
               <div className="form-group">
                 <label>Service Area / District</label>
                 <input
@@ -935,7 +893,6 @@ function DashboardVolunteer() {
                 />
               </div>
 
-              {/* Availability */}
               <div className="form-group">
                 <label>Availability Status</label>
                 <select
@@ -948,7 +905,6 @@ function DashboardVolunteer() {
                 </select>
               </div>
 
-              {/* Phone */}
               <div className="form-group">
                 <label>Phone / Emergency Contact</label>
                 <input
@@ -959,7 +915,6 @@ function DashboardVolunteer() {
                 />
               </div>
 
-              {/* Skills */}
               <div className="form-group">
                 <label>Skills & Capabilities</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
@@ -1013,7 +968,6 @@ function DashboardVolunteer() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1.5rem' }}>
                 <button
                   type="button"
@@ -1051,7 +1005,6 @@ function DashboardVolunteer() {
         </div>
       )}
 
-      {/* ── TASK COMPLETION MODAL ─────────────────────────────────── */}
       {completingTaskId && (
         <div
           style={{

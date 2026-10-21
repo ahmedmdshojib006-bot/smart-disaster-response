@@ -1,31 +1,14 @@
-// controllers/taskController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Task Controller (Member-3: Volunteer Task Management):
-//   - createTask: Admins assign a new disaster response task to a volunteer.
-//   - getAllTasks: Admins & NGOs inspect all tasks with filtering.
-//   - getMyTasks: Volunteers view tasks assigned specifically to them.
-//   - getTaskById: Retrieve detailed task info and history.
-//   - updateTaskStatus: Volunteer or Admin moves task across lifecycle:
-//       Assigned ──► Accepted ──► In Progress ──► Completed
-//   - assignTask: Admins reassign an existing task to another volunteer.
-//   - deleteTask: Admins remove/cancel a task.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const Task = require('../models/Task');
 const User = require('../models/User');
 const { sendNotification } = require('../services/notificationService');
 
-// State machine allowed transitions
 const VALID_TRANSITIONS = {
   Assigned: ['Accepted'],
   Accepted: ['In Progress'],
   'In Progress': ['Completed'],
-  Completed: [], // terminal state for normal flow
+  Completed: [], 
 };
 
-/**
- * Helper: Safely push real-time notification without breaking main request flow
- */
 const safeNotify = async (req, { type = 'general', title, message, recipientUserId, targetRole }) => {
   try {
     const io = req.app ? req.app.get('io') : null;
@@ -44,11 +27,6 @@ const safeNotify = async (req, { type = 'general', title, message, recipientUser
   }
 };
 
-/**
- * createTask
- * POST /api/tasks
- * Requires role: Admin
- */
 const createTask = async (req, res) => {
   try {
     const { title, description, taskType, priority, serviceArea, assignedTo, dueDate, notes } = req.body;
@@ -60,7 +38,6 @@ const createTask = async (req, res) => {
       });
     }
 
-    // Verify assigned volunteer exists and has role Volunteer
     const volunteer = await User.findById(assignedTo);
     if (!volunteer) {
       return res.status(404).json({
@@ -103,7 +80,6 @@ const createTask = async (req, res) => {
       { path: 'assignedBy', select: 'name email' },
     ]);
 
-    // Send real-time notification to the volunteer
     await safeNotify(req, {
       type: 'general',
       title: `New Task Assigned: ${newTask.title}`,
@@ -125,12 +101,6 @@ const createTask = async (req, res) => {
   }
 };
 
-/**
- * getAllTasks
- * GET /api/tasks
- * Requires role: Admin or NGO
- * Query parameters: status, priority, serviceArea, assignedTo, search
- */
 const getAllTasks = async (req, res) => {
   try {
     const { status, priority, serviceArea, assignedTo, search } = req.query;
@@ -176,12 +146,6 @@ const getAllTasks = async (req, res) => {
   }
 };
 
-/**
- * getMyTasks
- * GET /api/tasks/my-tasks
- * Requires role: Volunteer
- * Fetches all tasks assigned to the currently authenticated volunteer.
- */
 const getMyTasks = async (req, res) => {
   try {
     const { status } = req.query;
@@ -209,11 +173,6 @@ const getMyTasks = async (req, res) => {
   }
 };
 
-/**
- * getTaskById
- * GET /api/tasks/:id
- * Accessible to Admin, NGO, or the assigned volunteer
- */
 const getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
@@ -228,7 +187,6 @@ const getTaskById = async (req, res) => {
       });
     }
 
-    // Authorization check: Admin and NGO can view any task; Volunteer can only view their own
     const isAdminOrNGO = ['Admin', 'NGO'].includes(req.user.role);
     const isAssignedVolunteer = task.assignedTo && task.assignedTo._id.toString() === req.user._id.toString();
 
@@ -252,16 +210,6 @@ const getTaskById = async (req, res) => {
   }
 };
 
-/**
- * updateTaskStatus
- * PATCH /api/tasks/:id/status
- * State machine transition:
- *   Assigned ──► Accepted ──► In Progress ──► Completed
- *
- * Accessible to:
- *   - The assigned volunteer
- *   - Admins (who have override privilege)
- */
 const updateTaskStatus = async (req, res) => {
   try {
     const { status: targetStatus, notes } = req.body;
@@ -303,7 +251,6 @@ const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // Validate state machine transition for volunteers
     if (!isAdmin) {
       const allowedNextStates = VALID_TRANSITIONS[task.status] || [];
       if (!allowedNextStates.includes(targetStatus)) {
@@ -327,7 +274,6 @@ const updateTaskStatus = async (req, res) => {
       task.completedAt = new Date();
     }
 
-    // Append to status history
     task.statusHistory.push({
       status: targetStatus,
       changedBy: req.user._id,
@@ -337,9 +283,7 @@ const updateTaskStatus = async (req, res) => {
 
     await task.save();
 
-    // Notify Admin or Volunteer
     if (isAssignedVolunteer) {
-      // Volunteer updated status — notify the assigner (Admin)
       await safeNotify(req, {
         type: 'general',
         title: `Task ${targetStatus}: ${task.title}`,
@@ -348,7 +292,6 @@ const updateTaskStatus = async (req, res) => {
         targetRole: 'Admin',
       });
     } else if (isAdmin && task.assignedTo) {
-      // Admin adjusted status — notify the volunteer
       await safeNotify(req, {
         type: 'general',
         title: `Task Status Updated: ${task.title}`,
@@ -371,11 +314,6 @@ const updateTaskStatus = async (req, res) => {
   }
 };
 
-/**
- * assignTask
- * PUT /api/tasks/:id/assign
- * Admin can reassign task to a different volunteer
- */
 const assignTask = async (req, res) => {
   try {
     const { assignedTo, notes } = req.body;
@@ -404,7 +342,7 @@ const assignTask = async (req, res) => {
     }
 
     task.assignedTo = volunteer._id;
-    task.status = 'Assigned'; // reset to Assigned for new volunteer
+    task.status = 'Assigned'; 
     task.statusHistory.push({
       status: 'Assigned',
       changedBy: req.user._id,
@@ -439,11 +377,6 @@ const assignTask = async (req, res) => {
   }
 };
 
-/**
- * deleteTask
- * DELETE /api/tasks/:id
- * Admin can remove a task
- */
 const deleteTask = async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);

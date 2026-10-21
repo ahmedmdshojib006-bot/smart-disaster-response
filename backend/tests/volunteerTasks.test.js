@@ -1,8 +1,3 @@
-// tests/volunteerTasks.test.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Tests for Member-3: Volunteer Profile, Registration & Task State Machine
-// ─────────────────────────────────────────────────────────────────────────────
-
 const Task = require('../models/Task');
 const User = require('../models/User');
 const taskRoutes = require('../routes/taskRoutes');

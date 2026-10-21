@@ -1,12 +1,3 @@
-// ============================================================
-// src/pages/DashboardAdmin.jsx — Admin Dashboard
-//
-// Features:
-//   - Volunteer Roster & Availability Monitoring
-//   - Task Creation & Assignment to Volunteers
-//   - Task Lifecycle Tracking (Assigned -> Accepted -> In Progress -> Completed)
-// ============================================================
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
@@ -18,21 +9,17 @@ function DashboardAdmin() {
   const { user } = useAuth();
   const { socket } = useSocket();
 
-  // ── States ───────────────────────────────────────────────────
   const [volunteers, setVolunteers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  // Tabs: 'tasks' | 'volunteers'
   const [activeTab, setActiveTab] = useState('tasks');
 
-  // Task Filter States
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Create Task Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
   const [taskFormData, setTaskFormData] = useState({
@@ -46,15 +33,12 @@ function DashboardAdmin() {
     notes: '',
   });
 
-  // Reassign Modal State
   const [reassignTaskId, setReassignTaskId] = useState(null);
   const [reassignVolunteerId, setReassignVolunteerId] = useState('');
   const [reassigning, setReassigning] = useState(false);
 
-  // History Expand
   const [expandedAudit, setExpandedAudit] = useState({});
 
-  // ── Data Fetching ────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
       setLoadingData(true);
@@ -80,7 +64,6 @@ function DashboardAdmin() {
     fetchData();
   }, [fetchData]);
 
-  // Real-time socket updates
   useEffect(() => {
     if (!socket) return;
 
@@ -96,7 +79,6 @@ function DashboardAdmin() {
     };
   }, [socket, fetchData]);
 
-  // ── Create & Assign Task ─────────────────────────────────────
   const handleOpenCreateModal = (preselectedVolunteerId = '') => {
     setTaskFormData({
       title: '',
@@ -124,7 +106,6 @@ function DashboardAdmin() {
           text: `Task "${res.data.task.title}" successfully created and assigned!`,
         });
         setTimeout(() => setFeedbackMsg(null), 3500);
-        // Refresh volunteer counts
         fetchData();
       }
     } catch (err) {
@@ -137,7 +118,6 @@ function DashboardAdmin() {
     }
   };
 
-  // ── Reassign Task ────────────────────────────────────────────
   const handleReassign = async (e) => {
     e.preventDefault();
     if (!reassignTaskId || !reassignVolunteerId) return;
@@ -170,7 +150,6 @@ function DashboardAdmin() {
     }
   };
 
-  // ── Delete Task ──────────────────────────────────────────────
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
 
@@ -194,7 +173,6 @@ function DashboardAdmin() {
     setExpandedAudit((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
-  // ── Filters & Metrics ────────────────────────────────────────
   const filteredTasks = tasks.filter((t) => {
     if (statusFilter !== 'All' && t.status !== statusFilter) return false;
     if (priorityFilter !== 'All' && t.priority !== priorityFilter) return false;
@@ -220,7 +198,6 @@ function DashboardAdmin() {
       <Navbar />
 
       <div className="dashboard-content">
-        {/* Feedback Alert */}
         {feedbackMsg && (
           <div
             style={{
@@ -237,7 +214,6 @@ function DashboardAdmin() {
           </div>
         )}
 
-        {/* Welcome & Overview Card */}
         <div className="dashboard-card" style={{ borderTop: '4px solid #1a237e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
@@ -311,7 +287,6 @@ function DashboardAdmin() {
 
           <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '1.2rem 0' }} />
 
-          {/* Stats Counters */}
           <div
             style={{
               display: 'grid',
@@ -338,7 +313,6 @@ function DashboardAdmin() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
         <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem' }}>
           <button
             type="button"
@@ -374,10 +348,8 @@ function DashboardAdmin() {
           </button>
         </div>
 
-        {/* ── TAB 1: TASKS OVERVIEW ───────────────────────────────── */}
         {activeTab === 'tasks' && (
           <div className="dashboard-card">
-            {/* Filter Bar */}
             <div
               style={{
                 display: 'flex',
@@ -441,7 +413,6 @@ function DashboardAdmin() {
               </select>
             </div>
 
-            {/* Tasks List */}
             {loadingData ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                 Loading tasks...
@@ -531,7 +502,6 @@ function DashboardAdmin() {
                         </div>
                       </div>
 
-                      {/* Status Badge */}
                       <span
                         style={{
                           background:
@@ -564,7 +534,6 @@ function DashboardAdmin() {
                       {task.description}
                     </p>
 
-                    {/* Progress Bar */}
                     <div
                       style={{
                         margin: '0.8rem 0',
@@ -604,7 +573,6 @@ function DashboardAdmin() {
                       </div>
                     )}
 
-                    {/* Actions */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.6rem' }}>
                       <button
                         type="button"
@@ -662,7 +630,6 @@ function DashboardAdmin() {
                       </div>
                     </div>
 
-                    {/* Audit Trail */}
                     {expandedAudit[task._id] && (
                       <div style={{ marginTop: '0.8rem', padding: '0.8rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#475569' }}>
                         <strong>Audit Trail:</strong>
@@ -687,7 +654,6 @@ function DashboardAdmin() {
           </div>
         )}
 
-        {/* ── TAB 2: VOLUNTEER ROSTER ────────────────────────────── */}
         {activeTab === 'volunteers' && (
           <div className="dashboard-card">
             <h2 style={{ fontSize: '1.3rem', color: '#1e293b', marginTop: 0, marginBottom: '0.4rem' }}>
@@ -760,7 +726,6 @@ function DashboardAdmin() {
                         📍 Service Area: <strong>{vol.serviceArea || 'Not set'}</strong>
                       </div>
 
-                      {/* Skills */}
                       <div style={{ marginTop: '0.6rem' }}>
                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>
                           Skills:
@@ -788,7 +753,6 @@ function DashboardAdmin() {
                         </div>
                       </div>
 
-                      {/* Workload */}
                       <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.8rem' }}>
                         Active Tasks: <strong>{vol.stats?.activeTasks || 0}</strong> • Completed:{' '}
                         <strong>{vol.stats?.completedTasks || 0}</strong>
@@ -821,7 +785,6 @@ function DashboardAdmin() {
         )}
       </div>
 
-      {/* ── CREATE TASK MODAL ─────────────────────────────────────── */}
       {showCreateModal && (
         <div
           style={{
@@ -858,7 +821,6 @@ function DashboardAdmin() {
             </p>
 
             <form onSubmit={handleCreateTask}>
-              {/* Title */}
               <div className="form-group">
                 <label>Task Title *</label>
                 <input
@@ -870,7 +832,6 @@ function DashboardAdmin() {
                 />
               </div>
 
-              {/* Description */}
               <div className="form-group">
                 <label>Description & Instructions *</label>
                 <textarea
@@ -889,7 +850,6 @@ function DashboardAdmin() {
                 />
               </div>
 
-              {/* Type & Priority Row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                 <div className="form-group">
                   <label>Task Type</label>
@@ -920,7 +880,6 @@ function DashboardAdmin() {
                 </div>
               </div>
 
-              {/* Service Area */}
               <div className="form-group">
                 <label>Service Area / Location *</label>
                 <input
@@ -932,7 +891,6 @@ function DashboardAdmin() {
                 />
               </div>
 
-              {/* Assign to Volunteer */}
               <div className="form-group">
                 <label>Assign to Volunteer *</label>
                 <select
@@ -950,7 +908,6 @@ function DashboardAdmin() {
                 </select>
               </div>
 
-              {/* Due Date */}
               <div className="form-group">
                 <label>Target Completion Date (Optional)</label>
                 <input
@@ -960,7 +917,6 @@ function DashboardAdmin() {
                 />
               </div>
 
-              {/* Modal Buttons */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1.5rem' }}>
                 <button
                   type="button"
@@ -998,7 +954,6 @@ function DashboardAdmin() {
         </div>
       )}
 
-      {/* ── REASSIGN MODAL ────────────────────────────────────────── */}
       {reassignTaskId && (
         <div
           style={{

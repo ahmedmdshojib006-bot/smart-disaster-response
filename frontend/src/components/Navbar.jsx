@@ -1,18 +1,8 @@
-// ============================================================
-// src/components/Navbar.jsx — Top Navigation Bar
-//
-// Displays the app name, notification bell, user info and
-// a logout button when authenticated, or Login/Register links
-// when not authenticated.
-// ============================================================
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import NotificationBell from './NotificationBell.jsx';
 
-// Inline style objects — keeps this component self-contained
-// with no external CSS file needed for the navbar.
 const styles = {
   nav: {
     display: 'flex',
@@ -20,12 +10,12 @@ const styles = {
     justifyContent: 'space-between',
     padding: '0 1.5rem',
     height: '60px',
-    backgroundColor: '#1a237e',  // Deep blue brand colour
+    backgroundColor: '#1a237e',  
     color: '#ffffff',
     boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     position: 'sticky',
     top: 0,
-    zIndex: 1000, // Stay above page content when scrolling
+    zIndex: 1000, 
   },
   brand: {
     fontSize: '1.2rem',
@@ -77,9 +67,6 @@ function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Handle logout button click:
-  // 1. Call the logout() function from AuthContext (clears token & user state)
-  // 2. Redirect the user to the login page
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -87,19 +74,15 @@ function Navbar() {
 
   return (
     <nav style={styles.nav}>
-      {/* ── Brand / App Name ─────────────────────── */}
       <Link to="/" style={styles.brand}>
         🚨 DisasterResponse
       </Link>
 
-      {/* ── Right Side Content ────────────────────── */}
       <div style={styles.rightSection}>
         {isAuthenticated && user ? (
           <>
-            {/* Notification bell — only shown to authenticated users */}
             <NotificationBell />
 
-            {/* Display the user's name and role */}
             <span style={styles.userName}>
               {user.name}
             </span>
@@ -121,7 +104,6 @@ function Navbar() {
               👤 Profile
             </Link>
 
-            {/* Logout button */}
             <button
               onClick={handleLogout}
               style={styles.logoutBtn}
@@ -133,7 +115,6 @@ function Navbar() {
           </>
         ) : (
           <>
-            {/* Show Login and Register links when not authenticated */}
             <Link to="/login" style={styles.authLink}>
               Login
             </Link>

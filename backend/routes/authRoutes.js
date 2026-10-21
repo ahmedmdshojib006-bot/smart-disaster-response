@@ -1,14 +1,3 @@
-// routes/authRoutes.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Authentication routes
-//
-// Mounted at /api/auth in server.js, so the full paths are:
-//   POST   /api/auth/register  — create a new account
-//   POST   /api/auth/login     — log in and receive a JWT
-//   GET    /api/auth/me        — get the current user's profile (protected)
-//   POST   /api/auth/logout    — server-side logout acknowledgement (protected)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const express = require('express');
 const router = express.Router();
 

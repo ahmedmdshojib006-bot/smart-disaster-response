@@ -1,9 +1,3 @@
-// scripts/createAdmin.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Secure Admin Creation Script
-// Creates an initial Admin account in the database.
-// ─────────────────────────────────────────────────────────────────────────────
-
 require('dotenv').config();
 const connectDB = require('../config/db');
 const User = require('../models/User');
@@ -16,20 +10,19 @@ const seedAdmin = async () => {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin12345';
     const adminName = process.env.ADMIN_NAME || 'System Administrator';
 
-    // Check if admin already exists
     let admin = await User.findOne({ email: adminEmail });
 
     if (admin) {
       console.log(`ℹ️ Admin account already exists: ${adminEmail}`);
       admin.role = 'Admin';
-      admin.passwordHash = adminPassword; // pre-save hook will re-hash
+      admin.passwordHash = adminPassword; 
       await admin.save();
       console.log(`✅ Admin credentials reset successfully!`);
     } else {
       admin = new User({
         name: adminName,
         email: adminEmail,
-        passwordHash: adminPassword, // will be hashed automatically by pre-save hook
+        passwordHash: adminPassword, 
         role: 'Admin',
       });
       await admin.save();

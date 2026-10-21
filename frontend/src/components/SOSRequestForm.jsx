@@ -1,11 +1,3 @@
-// ============================================================
-// src/components/SOSRequestForm.jsx — Emergency SOS Request Form
-// Member-2 Functionality:
-//   Victims can submit an SOS/help request with their GPS location,
-//   type of need (food, water, medicine, rescue), number of people,
-//   and an optional photo.
-// ============================================================
-
 import React, { useState } from 'react';
 import axiosInstance from '../api/axiosInstance.js';
 
@@ -17,7 +9,6 @@ const AVAILABLE_NEEDS = [
 ];
 
 function SOSRequestForm({ onSOSSubmitted }) {
-  // ── Form State ─────────────────────────────────────────────
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
@@ -35,7 +26,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // ── GPS Geolocation Handler ────────────────────────────────
   const handleDetectLocation = () => {
     setErrorMsg('');
     if (!navigator.geolocation) {
@@ -83,11 +73,9 @@ function SOSRequestForm({ onSOSSubmitted }) {
     );
   };
 
-  // ── Needs Toggle Handler ───────────────────────────────────
   const toggleNeed = (needId) => {
     setSelectedNeeds((prev) => {
       if (prev.includes(needId)) {
-        // Keep at least one selected if possible, but allow empty check on submit
         return prev.filter((id) => id !== needId);
       } else {
         return [...prev, needId];
@@ -95,7 +83,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     });
   };
 
-  // ── Photo Selection & Preview Handler ──────────────────────
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -125,13 +112,11 @@ function SOSRequestForm({ onSOSSubmitted }) {
     setPhotoPreview(null);
   };
 
-  // ── Form Submission ────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Client-side validations
     if (!latitude || !longitude) {
       setErrorMsg('GPS coordinates are required. Click "Auto-Detect My GPS" or enter latitude/longitude.');
       return;
@@ -181,7 +166,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
 
       if (response.data.success) {
         setSuccessMsg('🚨 Your Emergency SOS has been broadcast to relief teams and volunteers!');
-        // Reset form
         setDescription('');
         setPhotoFile(null);
         setPhotoPreview(null);
@@ -232,21 +216,24 @@ function SOSRequestForm({ onSOSSubmitted }) {
       {successMsg && (
         <div
           style={{
-            background: '#e8f5e9',
-            color: '#2e7d32',
-            padding: '0.85rem 1.2rem',
-            borderRadius: '8px',
-            marginBottom: '1.2rem',
-            fontWeight: '600',
-            fontSize: '0.92rem',
+            background: '#f0fdf4',
+            color: '#15803d',
+            border: '2px solid #86efac',
+            padding: '1rem 1.4rem',
+            borderRadius: '10px',
+            marginBottom: '1.5rem',
           }}
         >
-          {successMsg}
+          <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.3rem' }}>
+            {successMsg}
+          </div>
+          <div style={{ fontSize: '0.88rem', color: '#166534', marginTop: '0.3rem' }}>
+            Current Status: <strong style={{ background: '#fef3c7', color: '#92400e', padding: '0.2rem 0.6rem', borderRadius: 12, border: '1px solid #fde68a' }}>⏳ PENDING VERIFICATION</strong> — Your emergency distress signal is now live. Check the tracker below for updates.
+          </div>
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* 1. GPS Location */}
         <div className="sos-form-group">
           <label>
             1. GPS Location & Landmark <span className="required-star">*</span>
@@ -318,7 +305,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 2. Type of Need */}
         <div className="sos-form-group">
           <label>
             2. Type of Emergency Need <span className="required-star">*</span>{' '}
@@ -351,7 +337,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 3. Number of People */}
         <div className="sos-form-group">
           <label>
             3. Number of People Requiring Help <span className="required-star">*</span>
@@ -390,7 +375,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 4. Optional Photo */}
         <div className="sos-form-group">
           <label>
             4. Optional Photo <span style={{ fontSize: '0.82rem', color: '#666' }}>(Camera or Gallery)</span>
@@ -431,7 +415,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 5. Additional Description */}
         <div className="sos-form-group">
           <label>5. Additional Situation Details (Optional)</label>
           <textarea
@@ -444,7 +427,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           />
         </div>
 
-        {/* Priority Badge Indicator */}
         <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '0.9rem', color: '#555' }}>Assigned Priority:</span>
           {isCritical ? (
@@ -478,7 +460,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           )}
         </div>
 
-        {/* Submit Button */}
         <button type="submit" className="sos-submit-btn" disabled={submitting}>
           <span>🚨</span>
           {submitting ? 'Broadcasting SOS to Relief Network...' : 'SUBMIT EMERGENCY SOS NOW'}

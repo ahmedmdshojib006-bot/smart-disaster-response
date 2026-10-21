@@ -1,10 +1,6 @@
-// tests/auth.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
 const express = require('express');
-
-// We test controllers directly with express app without opening real Mongo if not available,
-// or using mongodb-memory-server / mock. Here we do an express route integration check.
 
 describe('Auth & Notification Route Specifications', () => {
   it('should export all required routes and middleware', () => {

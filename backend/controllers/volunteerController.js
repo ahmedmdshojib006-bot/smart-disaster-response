@@ -1,20 +1,6 @@
-// controllers/volunteerController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Volunteer controller:
-//   - getVolunteers (Admins/NGOs browse/filter registered volunteers)
-//   - getVolunteerProfile (Volunteer views their own skills/availability/tasks)
-//   - updateVolunteerProfile (Volunteer updates skills, availability & service area)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const User = require('../models/User');
 const Task = require('../models/Task');
 
-/**
- * getVolunteers
- * GET /api/volunteers
- * Accessible to Admin and NGO roles.
- * Supports query params: availability, serviceArea, skill, search
- */
 const getVolunteers = async (req, res) => {
   try {
     const { availability, serviceArea, skill, search } = req.query;
@@ -42,7 +28,6 @@ const getVolunteers = async (req, res) => {
       .select('-passwordHash')
       .sort({ createdAt: -1 });
 
-    // Aggregate active and completed task counts for each volunteer
     const volunteerIds = volunteers.map((v) => v._id);
     const taskCounts = await Task.aggregate([
       { $match: { assignedTo: { $in: volunteerIds } } },
@@ -99,11 +84,6 @@ const getVolunteers = async (req, res) => {
   }
 };
 
-/**
- * getVolunteerProfile
- * GET /api/volunteers/profile
- * Accessible to authenticated Volunteer.
- */
 const getVolunteerProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-passwordHash');
@@ -114,7 +94,6 @@ const getVolunteerProfile = async (req, res) => {
       });
     }
 
-    // Fetch task summary
     const taskSummary = await Task.aggregate([
       { $match: { assignedTo: user._id } },
       {
@@ -151,11 +130,6 @@ const getVolunteerProfile = async (req, res) => {
   }
 };
 
-/**
- * updateVolunteerProfile
- * PUT /api/volunteers/profile
- * Allows a volunteer to update their skills, availability, and service area.
- */
 const updateVolunteerProfile = async (req, res) => {
   try {
     const { skills, availability, serviceArea, phone } = req.body;

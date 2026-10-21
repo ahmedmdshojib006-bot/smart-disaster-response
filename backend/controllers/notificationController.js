@@ -1,42 +1,21 @@
-// controllers/notificationController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Notification controllers: getNotifications, markOneRead, markAllRead
-//
-// All routes using these controllers must be protected (req.user is required).
-// Notifications are fetched using a $or query that matches:
-//   - Personal notifications addressed to this specific user
-//   - Role-cast notifications addressed to the user's role group
-//   - Broadcast notifications (both recipient and targetRole are null)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const Notification = require('../models/Notification');
 
-// ── Helper: build the $or query for the current user ─────────────────────────
-// Extracted into a helper so both get and mark-all-read can share the same logic.
 const buildUserQuery = (user) => ({
   $or: [
-    { recipient: user._id },                           // personal notification
-    { targetRole: user.role },                         // role-cast notification
-    { recipient: null, targetRole: null },             // broadcast to everyone
+    { recipient: user._id },                           
+    { targetRole: user.role },                         
+    { recipient: null, targetRole: null },             
   ],
 });
 
-/**
- * getNotifications
- * GET /api/notifications
- * Returns the 50 most recent notifications relevant to the logged-in user,
- * along with the count of unread ones (used to show a badge in the UI).
- */
 const getNotifications = async (req, res) => {
   try {
     const query = buildUserQuery(req.user);
 
-    // Fetch up to 50 notifications, newest first
     const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 }) // -1 = descending (most recent at the top)
+      .sort({ createdAt: -1 }) 
       .limit(50);
 
-    // Count how many are still unread so the frontend can show a badge number
     const unreadCount = await Notification.countDocuments({
       ...query,
       isRead: false,
@@ -56,22 +35,13 @@ const getNotifications = async (req, res) => {
   }
 };
 
-/**
- * markOneRead
- * PATCH /api/notifications/:id/read
- * Marks a single notification as read.
- * Only marks it if it actually belongs to the current user (security check).
- */
 const markOneRead = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find the notification AND verify it's visible to this user in the same query
-    // This prevents users from marking other people's private notifications as read.
     const notification = await Notification.findOneAndUpdate(
       {
         _id: id,
-        // Must match the ownership / visibility rules
         $or: [
           { recipient: req.user._id },
           { targetRole: req.user.role },
@@ -79,7 +49,7 @@ const markOneRead = async (req, res) => {
         ],
       },
       { isRead: true },
-      { new: true } // return the UPDATED document (not the old one)
+      { new: true } 
     );
 
     if (!notification) {
@@ -102,16 +72,10 @@ const markOneRead = async (req, res) => {
   }
 };
 
-/**
- * markAllRead
- * PATCH /api/notifications/read-all
- * Marks ALL of the current user's relevant notifications as read.
- */
 const markAllRead = async (req, res) => {
   try {
     const query = buildUserQuery(req.user);
 
-    // updateMany applies the change to every matching document at once
     await Notification.updateMany(query, { isRead: true });
 
     return res.status(200).json({
