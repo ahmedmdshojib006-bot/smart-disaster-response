@@ -14,6 +14,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const volunteerRoutes = require('./routes/volunteerRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const shelterRoutes = require('./routes/shelterRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/shelters', shelterRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
