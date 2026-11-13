@@ -1,5 +1,20 @@
-import React, { useState } from 'react';
+// ============================================================
+// src/components/SOSRequestForm.jsx — Emergency SOS Request Form
+//
+// Module 1 (Member-2):
+//   Victims can submit an SOS/help request with GPS location,
+//   type of need (food, water, medicine, rescue), number of people,
+//   and an optional photo.
+//
+// Module 2 (Member-2):
+//   - Vulnerability demographic factors (children, elderly people,
+//     pregnant women, injuries) for automated priority calculation.
+//   - Real-time priority preview meter and automated urgent triage.
+// ============================================================
+
+import React, { useState, useMemo } from 'react';
 import axiosInstance from '../api/axiosInstance.js';
+import { calculatePriorityScoreClient } from '../utils/priorityCalculatorClient.js';
 
 const AVAILABLE_NEEDS = [
   { id: 'rescue', label: 'Emergency Rescue', icon: '🛟', desc: 'Trapped / Water rising' },
@@ -9,15 +24,23 @@ const AVAILABLE_NEEDS = [
 ];
 
 function SOSRequestForm({ onSOSSubmitted }) {
+  // ── Form State ─────────────────────────────────────────────
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
+  const [district, setDistrict] = useState('');
   const [gpsStatus, setGpsStatus] = useState({ text: '', type: '' });
   const [gpsLoading, setGpsLoading] = useState(false);
 
   const [selectedNeeds, setSelectedNeeds] = useState(['rescue']);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [description, setDescription] = useState('');
+
+  // Module 2: Vulnerability demographic factor counters
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [elderlyCount, setElderlyCount] = useState(0);
+  const [pregnantCount, setPregnantCount] = useState(0);
+  const [injuredCount, setInjuredCount] = useState(0);
 
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -26,6 +49,22 @@ function SOSRequestForm({ onSOSSubmitted }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // ── Module 2: Live Real-Time Priority Score Preview ───────
+  const priorityCalculation = useMemo(() => {
+    return calculatePriorityScoreClient({
+      vulnerabilities: {
+        children: childrenCount,
+        elderly: elderlyCount,
+        pregnantWomen: pregnantCount,
+        injured: injuredCount,
+      },
+      needs: selectedNeeds,
+      numberOfPeople,
+      description,
+    });
+  }, [childrenCount, elderlyCount, pregnantCount, injuredCount, selectedNeeds, numberOfPeople, description]);
+
+  // ── GPS Geolocation Handler ────────────────────────────────
   const handleDetectLocation = () => {
     setErrorMsg('');
     if (!navigator.geolocation) {
@@ -73,6 +112,7 @@ function SOSRequestForm({ onSOSSubmitted }) {
     );
   };
 
+  // ── Needs Toggle Handler ───────────────────────────────────
   const toggleNeed = (needId) => {
     setSelectedNeeds((prev) => {
       if (prev.includes(needId)) {
@@ -83,6 +123,7 @@ function SOSRequestForm({ onSOSSubmitted }) {
     });
   };
 
+  // ── Photo Selection & Preview Handler ──────────────────────
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -112,6 +153,7 @@ function SOSRequestForm({ onSOSSubmitted }) {
     setPhotoPreview(null);
   };
 
+  // ── Form Submission ────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -150,9 +192,21 @@ function SOSRequestForm({ onSOSSubmitted }) {
       formData.append('latitude', latitude);
       formData.append('longitude', longitude);
       formData.append('address', address);
+      formData.append('district', district);
       formData.append('numberOfPeople', numberOfPeople);
       formData.append('description', description);
       formData.append('needs', JSON.stringify(selectedNeeds));
+
+      // Module 2: Vulnerability Demographic Payload
+      formData.append(
+        'vulnerabilities',
+        JSON.stringify({
+          children: childrenCount,
+          elderly: elderlyCount,
+          pregnantWomen: pregnantCount,
+          injured: injuredCount,
+        })
+      );
 
       if (photoFile) {
         formData.append('photo', photoFile);
@@ -165,11 +219,22 @@ function SOSRequestForm({ onSOSSubmitted }) {
       });
 
       if (response.data.success) {
-        setSuccessMsg('🚨 Your Emergency SOS has been broadcast to relief teams and volunteers!');
+        const priorityScoreAssigned = response.data.data?.priorityScore || priorityCalculation.score;
+        const priorityTierAssigned = response.data.data?.priority || priorityCalculation.priority;
+
+        setSuccessMsg(
+          `🚨 Emergency SOS Dispatched! Priority Score: ${priorityScoreAssigned}/100 (${priorityTierAssigned}). Live alert broadcast to rescue teams.`
+        );
+
+        // Reset form
         setDescription('');
         setPhotoFile(null);
         setPhotoPreview(null);
         setNumberOfPeople(1);
+        setChildrenCount(0);
+        setElderlyCount(0);
+        setPregnantCount(0);
+        setInjuredCount(0);
 
         if (onSOSSubmitted) {
           onSOSSubmitted(response.data.data);
@@ -183,8 +248,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     }
   };
 
-  const isCritical = selectedNeeds.includes('rescue') || numberOfPeople >= 5;
-
   return (
     <div className="sos-form-card">
       <div className="sos-form-header">
@@ -192,8 +255,9 @@ function SOSRequestForm({ onSOSSubmitted }) {
           <span>🚨</span> Request Emergency Assistance (SOS)
         </h2>
         <p>
-          Fill in your current situation. Your SOS alert will be dispatched instantly in real time
-          to field volunteers, disaster response coordinators, and relief teams.
+          Fill in your distress details. The platform automatically calculates an objective
+          urgency priority score based on vulnerable individuals (children, elderly, pregnant, injured)
+          so rescue teams reach those most in danger first.
         </p>
       </div>
 
@@ -228,12 +292,25 @@ function SOSRequestForm({ onSOSSubmitted }) {
             {successMsg}
           </div>
           <div style={{ fontSize: '0.88rem', color: '#166534', marginTop: '0.3rem' }}>
-            Current Status: <strong style={{ background: '#fef3c7', color: '#92400e', padding: '0.2rem 0.6rem', borderRadius: 12, border: '1px solid #fde68a' }}>⏳ PENDING VERIFICATION</strong> — Your emergency distress signal is now live. Check the tracker below for updates.
+            Current Status:{' '}
+            <strong
+              style={{
+                background: '#fef3c7',
+                color: '#92400e',
+                padding: '0.2rem 0.6rem',
+                borderRadius: 12,
+                border: '1px solid #fde68a',
+              }}
+            >
+              ⏳ PENDING VERIFICATION
+            </strong>{' '}
+            — Your emergency signal is live on the Disaster Map.
           </div>
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* 1. GPS Location */}
         <div className="sos-form-group">
           <label>
             1. GPS Location & Landmark <span className="required-star">*</span>
@@ -290,21 +367,36 @@ function SOSRequestForm({ onSOSSubmitted }) {
               </div>
             </div>
 
-            <div>
-              <label style={{ fontSize: '0.85rem', color: '#555' }}>
-                Landmark / Specific Area Description (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Near Mirpur-10 Roundabout, 3rd floor red roof building"
-                className="gps-input"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.8rem', marginTop: '0.5rem' }}>
+              <div>
+                <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                  Landmark / Specific Area (e.g. Parshuram Bazar, Roof of Mosque)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Near Mirpur-10 Roundabout, 3rd floor red roof building"
+                  className="gps-input"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                  District (e.g. Feni, Sylhet)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Feni"
+                  className="gps-input"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </div>
 
+        {/* 2. Type of Need */}
         <div className="sos-form-group">
           <label>
             2. Type of Emergency Need <span className="required-star">*</span>{' '}
@@ -337,9 +429,10 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
+        {/* 3. Number of People */}
         <div className="sos-form-group">
           <label>
-            3. Number of People Requiring Help <span className="required-star">*</span>
+            3. Total Number of People in Group <span className="required-star">*</span>
           </label>
           <div className="counter-box">
             <button
@@ -370,14 +463,261 @@ function SOSRequestForm({ onSOSSubmitted }) {
               +
             </button>
             <span style={{ fontSize: '0.9rem', color: '#666' }}>
-              {numberOfPeople === 1 ? 'person' : 'people'} in your group
+              {numberOfPeople === 1 ? 'person' : 'people'} requiring evacuation or supplies
             </span>
           </div>
         </div>
 
+        {/* 4. Module 2: Vulnerable Demographics (Priority Scoring Factors) */}
+        <div className="sos-form-group" style={{ background: '#f8fafc', padding: '1.2rem', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <label style={{ fontSize: '1rem', color: '#1e293b', marginBottom: 0 }}>
+                4. Vulnerability Assessment (Priority Factors)
+              </label>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
+                Requests with high vulnerability are automatically prioritized at the top of the admin triage board.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.9rem' }}>
+            {/* Children */}
+            <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>👶 Children (&le; 12 yrs)</span>
+                <span style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 600 }}>+12 pts/ea</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setChildrenCount((prev) => Math.max(0, prev - 1))}
+                  disabled={childrenCount <= 0}
+                >
+                  −
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 24, textAlign: 'center' }}>
+                  {childrenCount}
+                </span>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setChildrenCount((prev) => prev + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Elderly */}
+            <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>👵 Elderly (&ge; 60 yrs)</span>
+                <span style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 600 }}>+10 pts/ea</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setElderlyCount((prev) => Math.max(0, prev - 1))}
+                  disabled={elderlyCount <= 0}
+                >
+                  −
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 24, textAlign: 'center' }}>
+                  {elderlyCount}
+                </span>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setElderlyCount((prev) => prev + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Pregnant Women */}
+            <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>🤰 Pregnant Women</span>
+                <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700 }}>+25 pts/ea</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setPregnantCount((prev) => Math.max(0, prev - 1))}
+                  disabled={pregnantCount <= 0}
+                >
+                  −
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 24, textAlign: 'center' }}>
+                  {pregnantCount}
+                </span>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setPregnantCount((prev) => prev + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Injured / Medical */}
+            <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>🩹 Injured / Urgent Medical</span>
+                <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700 }}>+25 pts/ea</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setInjuredCount((prev) => Math.max(0, prev - 1))}
+                  disabled={injuredCount <= 0}
+                >
+                  −
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 24, textAlign: 'center' }}>
+                  {injuredCount}
+                </span>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  style={{ width: 34, height: 34, fontSize: '1.1rem' }}
+                  onClick={() => setInjuredCount((prev) => prev + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-Time Priority Score Preview Meter */}
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.9rem 1.1rem',
+              borderRadius: 8,
+              background:
+                priorityCalculation.priority === 'Critical'
+                  ? '#fef2f2'
+                  : priorityCalculation.priority === 'High'
+                  ? '#fffbeb'
+                  : '#f8fafc',
+              border:
+                priorityCalculation.priority === 'Critical'
+                  ? '2px solid #ef4444'
+                  : priorityCalculation.priority === 'High'
+                  ? '2px solid #f59e0b'
+                  : '1px solid #cbd5e1',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '1.3rem' }}>
+                  {priorityCalculation.priority === 'Critical' ? '🚨' : priorityCalculation.priority === 'High' ? '⚠️' : 'ℹ️'}
+                </span>
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>
+                    Calculated Urgency Score:{' '}
+                    <span
+                      style={{
+                        color:
+                          priorityCalculation.priority === 'Critical'
+                            ? '#dc2626'
+                            : priorityCalculation.priority === 'High'
+                            ? '#d97706'
+                            : '#2563eb',
+                      }}
+                    >
+                      {priorityCalculation.score} / 100
+                    </span>{' '}
+                    —{' '}
+                    <span
+                      style={{
+                        textTransform: 'uppercase',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: 4,
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        background:
+                          priorityCalculation.priority === 'Critical'
+                            ? '#fee2e2'
+                            : priorityCalculation.priority === 'High'
+                            ? '#fef3c7'
+                            : '#e0f2fe',
+                        color:
+                          priorityCalculation.priority === 'Critical'
+                            ? '#991b1b'
+                            : priorityCalculation.priority === 'High'
+                            ? '#92400e'
+                            : '#075985',
+                      }}
+                    >
+                      {priorityCalculation.priority} Priority
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.15rem' }}>
+                    Priority scoring algorithm automatically prioritizes vulnerable citizens for admin dispatch.
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div style={{ width: '130px', height: '10px', background: '#e2e8f0', borderRadius: 5, overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${priorityCalculation.score}%`,
+                    background:
+                      priorityCalculation.priority === 'Critical'
+                        ? '#dc2626'
+                        : priorityCalculation.priority === 'High'
+                        ? '#f59e0b'
+                        : '#3b82f6',
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Factor Pills */}
+            {priorityCalculation.factors.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.6rem' }}>
+                {priorityCalculation.factors.map((f, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      fontSize: '0.75rem',
+                      background: 'rgba(0,0,0,0.06)',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: 4,
+                      color: '#334155',
+                    }}
+                  >
+                    +{f.points} pts: {f.desc || f.factor}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 5. Optional Photo */}
         <div className="sos-form-group">
           <label>
-            4. Optional Photo <span style={{ fontSize: '0.82rem', color: '#666' }}>(Camera or Gallery)</span>
+            5. Optional Photo <span style={{ fontSize: '0.82rem', color: '#666' }}>(Camera or Gallery)</span>
           </label>
           <div className="photo-upload-container">
             <input
@@ -415,8 +755,9 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
+        {/* 6. Additional Description */}
         <div className="sos-form-group">
-          <label>5. Additional Situation Details (Optional)</label>
+          <label>6. Additional Situation Details (Optional)</label>
           <textarea
             rows="3"
             className="gps-input"
@@ -427,42 +768,22 @@ function SOSRequestForm({ onSOSSubmitted }) {
           />
         </div>
 
-        <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.9rem', color: '#555' }}>Assigned Priority:</span>
-          {isCritical ? (
-            <span
-              style={{
-                background: '#ffebee',
-                color: '#c62828',
-                padding: '0.25rem 0.65rem',
-                borderRadius: '6px',
-                fontWeight: '700',
-                fontSize: '0.82rem',
-                border: '1px solid #ef9a9a',
-              }}
-            >
-              🚨 CRITICAL PRIORITY
-            </span>
-          ) : (
-            <span
-              style={{
-                background: '#fff8e1',
-                color: '#f57f17',
-                padding: '0.25rem 0.65rem',
-                borderRadius: '6px',
-                fontWeight: '700',
-                fontSize: '0.82rem',
-                border: '1px solid #ffe082',
-              }}
-            >
-              ⚠️ HIGH PRIORITY
-            </span>
-          )}
-        </div>
-
-        <button type="submit" className="sos-submit-btn" disabled={submitting}>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="sos-submit-btn"
+          disabled={submitting}
+          style={{
+            background:
+              priorityCalculation.priority === 'Critical'
+                ? 'linear-gradient(135deg, #b91c1c, #991b1b)'
+                : 'linear-gradient(135deg, #d32f2f, #b71c1c)',
+          }}
+        >
           <span>🚨</span>
-          {submitting ? 'Broadcasting SOS to Relief Network...' : 'SUBMIT EMERGENCY SOS NOW'}
+          {submitting
+            ? 'Broadcasting SOS to Relief Network...'
+            : `SUBMIT EMERGENCY SOS (SCORE: ${priorityCalculation.score} — ${priorityCalculation.priority.toUpperCase()})`}
         </button>
       </form>
     </div>

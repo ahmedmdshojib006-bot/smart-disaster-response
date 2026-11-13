@@ -1,0 +1,425 @@
+/* ==============================================================
+   src/styles/map.css — Live Disaster Map Styling (Member-2)
+   ============================================================== */
+
+.map-page-container {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+}
+
+/* ── Top Map Controls Bar ────────────────────────────────────── */
+.map-toolbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.8rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.map-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.map-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* Layer filter pill buttons */
+.map-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.map-filter-btn:hover {
+  background: #f8fafc;
+}
+
+.map-filter-btn.active-sos {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.map-filter-btn.active-shelter {
+  background: #e0f2fe;
+  color: #075985;
+  border-color: #7dd3fc;
+}
+
+.map-filter-btn.active-hazard {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.map-filter-btn.active-relief {
+  background: #f3e8ff;
+  color: #6b21a8;
+  border-color: #d8b4fe;
+}
+
+/* GPS Nearby Search Button */
+.nearby-search-btn {
+  background: #1a237e;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.2s;
+}
+
+.nearby-search-btn:hover:not(:disabled) {
+  background: #283593;
+}
+
+.nearby-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Split Layout (Map + Sidebar) ────────────────────────────── */
+.map-layout-body {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  height: calc(100vh - 125px);
+}
+
+.leaflet-map-wrapper {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.map-sidebar {
+  width: 380px;
+  max-width: 100%;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 900px) {
+  .map-layout-body {
+    flex-direction: column;
+    height: auto;
+  }
+  .leaflet-map-wrapper {
+    height: 55vh;
+    min-height: 380px;
+  }
+  .map-sidebar {
+    width: 100%;
+    height: 45vh;
+  }
+}
+
+.map-sidebar-header {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.map-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* ── Stats Summary Badges ────────────────────────────────────── */
+.map-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.map-stat-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.map-stat-box .stat-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.map-stat-box .stat-lbl {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ── Custom Leaflet HTML Marker Pins ─────────────────────────── */
+.custom-leaflet-icon {
+  background: transparent;
+  border: none;
+}
+
+.sos-marker-pin {
+  width: 38px;
+  height: 38px;
+  border-radius: 50% 50% 50% 0;
+  position: absolute;
+  transform: rotate(-45deg);
+  left: 50%;
+  top: 50%;
+  margin: -19px 0 0 -19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  border: 2px solid #ffffff;
+}
+
+.sos-marker-pin.critical {
+  background: #dc2626;
+  animation: pulse-critical 1.8s infinite;
+}
+
+.sos-marker-pin.high {
+  background: #ea580c;
+}
+
+.sos-marker-pin.medium {
+  background: #ca8a04;
+}
+
+.sos-marker-pin.completed {
+  background: #16a34a;
+}
+
+.sos-marker-inner {
+  transform: rotate(45deg);
+  font-size: 1.1rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes pulse-critical {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.shelter-marker-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0284c7;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.hazard-marker-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #d97706;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.relief-marker-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #7c3aed;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.user-location-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.35);
+  animation: pulse-user 2s infinite;
+}
+
+@keyframes pulse-user {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+/* ── Leaflet Popup Card Styling ──────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.5 !important;
+  min-width: 260px;
+  max-width: 320px;
+}
+
+.map-popup-card {
+  padding: 1.1rem;
+  font-family: inherit;
+}
+
+.map-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.map-popup-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.map-popup-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.map-popup-body {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.map-popup-actions {
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.map-popup-btn {
+  flex: 1;
+  text-align: center;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.map-popup-btn.primary {
+  background: #1a237e;
+  color: #ffffff;
+}
+
+.map-popup-btn.secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+/* ── Sidebar Request Card ────────────────────────────────────── */
+.sidebar-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem;
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-item-card:hover {
+  border-color: #1a237e;
+  box-shadow: 0 4px 12px rgba(26, 35, 126, 0.08);
+  transform: translateY(-1px);
+}
+
+.sidebar-item-card.critical {
+  border-left: 4px solid #dc2626;
+}
+
+.sidebar-item-card.high {
+  border-left: 4px solid #ea580c;
+}
+
+.sidebar-item-card.medium {
+  border-left: 4px solid #ca8a04;
+}
+
+.sidebar-item-card.low {
+  border-left: 4px solid #3b82f6;
+}

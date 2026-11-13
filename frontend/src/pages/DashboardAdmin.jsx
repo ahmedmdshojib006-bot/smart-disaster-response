@@ -37,14 +37,24 @@ function DashboardAdmin() {
   const [reassignVolunteerId, setReassignVolunteerId] = useState('');
   const [reassigning, setReassigning] = useState(false);
 
+  // Module 2 (Member-2): SOS Emergency Request State & Priority Triage
+  const [sosRequests, setSosRequests] = useState([]);
+  const [sosFilterStatus, setSosFilterStatus] = useState('All');
+  const [sosFilterPriority, setSosFilterPriority] = useState('All');
+  const [sosSearchTerm, setSosSearchTerm] = useState('');
+  const [assigningSOS, setAssigningSOS] = useState(null);
+  const [assignSOSVolunteerId, setAssignSOSVolunteerId] = useState('');
+  const [assigningSOSLoading, setAssigningSOSLoading] = useState(false);
+
   const [expandedAudit, setExpandedAudit] = useState({});
 
   const fetchData = useCallback(async () => {
     try {
       setLoadingData(true);
-      const [vRes, tRes] = await Promise.all([
+      const [vRes, tRes, sRes] = await Promise.all([
         axiosInstance.get('/api/volunteers'),
         axiosInstance.get('/api/tasks'),
+        axiosInstance.get('/api/sos?sortBy=priorityScore&order=desc'),
       ]);
 
       if (vRes.data?.volunteers) {
@@ -52,6 +62,9 @@ function DashboardAdmin() {
       }
       if (tRes.data?.tasks) {
         setTasks(tRes.data.tasks);
+      }
+      if (sRes.data?.data) {
+        setSosRequests(sRes.data.data);
       }
     } catch (err) {
       console.error('Error fetching admin data:', err);
@@ -68,14 +81,20 @@ function DashboardAdmin() {
     if (!socket) return;
 
     const handleNotification = (notif) => {
-      if (notif.title?.toLowerCase().includes('task') || notif.type === 'general') {
+      if (notif.title?.toLowerCase().includes('task') || notif.type === 'general' || notif.type === 'sos') {
         fetchData();
       }
     };
 
+    const handleSOS = () => fetchData();
+
     socket.on('notification:new', handleNotification);
+    socket.on('sos:created', handleSOS);
+    socket.on('sos:updated', handleSOS);
     return () => {
       socket.off('notification:new', handleNotification);
+      socket.off('sos:created', handleSOS);
+      socket.off('sos:updated', handleSOS);
     };
   }, [socket, fetchData]);
 
@@ -173,6 +192,76 @@ function DashboardAdmin() {
     setExpandedAudit((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
+  const handleAssignSOSToVolunteer = async (e) => {
+    e.preventDefault();
+    if (!assigningSOS || !assignSOSVolunteerId) return;
+
+    setAssigningSOSLoading(true);
+    try {
+      const res = await axiosInstance.patch(`/api/sos/${assigningSOS._id}/status`, {
+        status: 'Assigned',
+        assignedVolunteer: assignSOSVolunteerId,
+        note: `Volunteer assigned by Administrator ${user?.name || ''}`,
+      });
+      if (res.data?.success) {
+        setFeedbackMsg({
+          type: 'success',
+          text: `Volunteer successfully assigned to SOS #${assigningSOS._id.slice(-6).toUpperCase()}!`,
+        });
+        setAssigningSOS(null);
+        setAssignSOSVolunteerId('');
+        setTimeout(() => setFeedbackMsg(null), 3500);
+        fetchData();
+      }
+    } catch (err) {
+      setFeedbackMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Failed to assign volunteer to SOS.',
+      });
+    } finally {
+      setAssigningSOSLoading(false);
+    }
+  };
+
+  const handleQuickSOSStatus = async (sosId, newStatus) => {
+    try {
+      const res = await axiosInstance.patch(`/api/sos/${sosId}/status`, {
+        status: newStatus,
+        note: `Status updated to ${newStatus} by Administrator`,
+      });
+      if (res.data?.success) {
+        setFeedbackMsg({
+          type: 'success',
+          text: `SOS status updated to ${newStatus}.`,
+        });
+        setTimeout(() => setFeedbackMsg(null), 3500);
+        fetchData();
+      }
+    } catch (err) {
+      setFeedbackMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Failed to update SOS status.',
+      });
+    }
+  };
+
+  const filteredSOSRequests = sosRequests.filter((s) => {
+    if (sosStatusFilter !== 'All' && s.status !== sosStatusFilter) return false;
+    if (sosPriorityFilter !== 'All' && s.priority !== sosPriorityFilter) return false;
+    if (sosSearchTerm.trim()) {
+      const term = sosSearchTerm.toLowerCase();
+      const matchAddr = s.location?.address?.toLowerCase().includes(term);
+      const matchName = s.victim?.name?.toLowerCase().includes(term);
+      const matchNeeds = s.needs?.some((n) => n.toLowerCase().includes(term));
+      if (!matchAddr && !matchName && !matchNeeds) return false;
+    }
+    return true;
+  });
+
+  const criticalSOSCount = sosRequests.filter(
+    (s) => (s.priorityScore !== undefined && s.priorityScore >= 70) || s.priority === 'Critical'
+  ).length;
+
   const filteredTasks = tasks.filter((t) => {
     if (statusFilter !== 'All' && t.status !== statusFilter) return false;
     if (priorityFilter !== 'All' && t.priority !== priorityFilter) return false;
@@ -226,6 +315,24 @@ function DashboardAdmin() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <Link
+                to="/map"
+                style={{
+                  background: '#e0f2fe',
+                  color: '#0369a1',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                🗺️ Live Disaster Map
+              </Link>
               <Link
                 to="/admin/users"
                 style={{
@@ -294,6 +401,14 @@ function DashboardAdmin() {
               gap: '1rem',
             }}
           >
+            <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: '8px', border: '1px solid #fecaca', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#dc2626' }}>{criticalSOSCount}</div>
+              <div style={{ fontSize: '0.85rem', color: '#991b1b', fontWeight: '700' }}>🚨 Critical SOS Cases</div>
+            </div>
+            <div style={{ background: '#fffbeb', padding: '1rem', borderRadius: '8px', border: '1px solid #fde68a', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#d97706' }}>{sosRequests.length}</div>
+              <div style={{ fontSize: '0.85rem', color: '#92400e', fontWeight: '700' }}>Total SOS Signals</div>
+            </div>
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
               <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#1e293b' }}>{volunteers.length}</div>
               <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '600' }}>Registered Volunteers</div>
@@ -306,14 +421,29 @@ function DashboardAdmin() {
               <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#2563eb' }}>{activeTasksCount}</div>
               <div style={{ fontSize: '0.85rem', color: '#1d4ed8', fontWeight: '600' }}>Active Tasks in Field</div>
             </div>
-            <div style={{ background: '#faf5ff', padding: '1rem', borderRadius: '8px', border: '1px solid #e9d5ff', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#9333ea' }}>{completedTasksCount}</div>
-              <div style={{ fontSize: '0.85rem', color: '#7e22ce', fontWeight: '600' }}>Completed Operations</div>
-            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem' }}>
+        <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('sos')}
+            style={{
+              padding: '0.65rem 1.4rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'sos' ? '#dc2626' : '#fff',
+              color: activeTab === 'sos' ? '#fff' : '#475569',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            🚨 SOS Priority Triage ({sosRequests.length})
+          </button>
           <button
             type="button"
             onClick={() => setActiveTab('tasks')}
@@ -347,6 +477,319 @@ function DashboardAdmin() {
             🦺 Volunteer Roster & Skills ({volunteers.length})
           </button>
         </div>
+
+        {activeTab === 'sos' && (
+          <div className="dashboard-card" style={{ borderTop: '4px solid #dc2626' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.8rem',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                marginBottom: '1.2rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid #eee',
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Search SOS by victim, address, or need..."
+                value={sosSearchTerm}
+                onChange={(e) => setSosSearchTerm(e.target.value)}
+                style={{
+                  flex: 1,
+                  minWidth: '220px',
+                  padding: '0.6rem 0.9rem',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.9rem',
+                }}
+              />
+
+              <select
+                value={sosPriorityFilter}
+                onChange={(e) => setSosPriorityFilter(e.target.value)}
+                style={{
+                  padding: '0.6rem 0.9rem',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.9rem',
+                  background: '#fff',
+                }}
+              >
+                <option value="All">All Urgency Tiers</option>
+                <option value="Critical">🚨 Critical (&ge;70)</option>
+                <option value="High">⚠️ High (45-69)</option>
+                <option value="Medium">🟡 Medium (25-44)</option>
+                <option value="Low">🔵 Low (&lt;25)</option>
+              </select>
+
+              <select
+                value={sosStatusFilter}
+                onChange={(e) => setSosStatusFilter(e.target.value)}
+                style={{
+                  padding: '0.6rem 0.9rem',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.9rem',
+                  background: '#fff',
+                }}
+              >
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Assigned">Assigned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+
+              <Link
+                to="/map"
+                style={{
+                  background: '#1a237e',
+                  color: '#fff',
+                  padding: '0.6rem 1.1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                🗺️ Open Live Disaster Map
+              </Link>
+            </div>
+
+            {filteredSOSRequests.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🛡️</div>
+                <h3 style={{ margin: '0 0 0.4rem 0', color: '#1e293b' }}>No SOS Requests Found</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                  No active emergency requests match your current filters.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                {filteredSOSRequests.map((sos) => {
+                  const v = sos.vulnerabilities || {};
+                  const isCrit = (sos.priorityScore !== undefined && sos.priorityScore >= 70) || sos.priority === 'Critical';
+
+                  return (
+                    <div
+                      key={sos._id}
+                      style={{
+                        background: '#ffffff',
+                        border: `1.5px solid ${isCrit ? '#fca5a5' : '#e2e8f0'}`,
+                        borderLeft: `5px solid ${isCrit ? '#dc2626' : (sos.priorityScore >= 45) ? '#ea580c' : '#3b82f6'}`,
+                        borderRadius: '10px',
+                        padding: '1.2rem',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '1.05rem', color: '#1e293b' }}>
+                              SOS #{sos._id.slice(-6).toUpperCase()}
+                            </strong>
+                            <span
+                              style={{
+                                background: isCrit ? '#fee2e2' : '#fef3c7',
+                                color: isCrit ? '#991b1b' : '#92400e',
+                                border: `1px solid ${isCrit ? '#fca5a5' : '#fde68a'}`,
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 800,
+                              }}
+                            >
+                              Urgency Score: {sos.priorityScore !== undefined ? sos.priorityScore : '—'}/100 ({sos.priority || 'High'})
+                            </span>
+                            <span
+                              style={{
+                                background: sos.status === 'Completed' ? '#dcfce7' : sos.status === 'In Progress' ? '#f3e8ff' : '#fef3c7',
+                                color: sos.status === 'Completed' ? '#15803d' : sos.status === 'In Progress' ? '#7e22ce' : '#b45309',
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '12px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {sos.status}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>
+                            Submitted by: <strong>{sos.victim?.name || 'Anonymous'}</strong> ({sos.victim?.email || 'N/A'}) • {new Date(sos.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Quick action buttons */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAssigningSOS(sos);
+                              setAssignSOSVolunteerId(sos.assignedVolunteer?._id || '');
+                            }}
+                            style={{
+                              background: '#eff6ff',
+                              color: '#1d4ed8',
+                              border: '1px solid #bfdbfe',
+                              borderRadius: '6px',
+                              padding: '0.4rem 0.8rem',
+                              fontSize: '0.82rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            🤝 {sos.assignedVolunteer ? 'Reassign Volunteer' : 'Assign Volunteer'}
+                          </button>
+
+                          <select
+                            value={sos.status}
+                            onChange={(e) => handleQuickSOSStatus(sos._id, e.target.value)}
+                            style={{
+                              padding: '0.35rem 0.6rem',
+                              borderRadius: '6px',
+                              border: '1px solid #cbd5e1',
+                              fontSize: '0.82rem',
+                              fontWeight: 600,
+                              background: '#fff',
+                              color: '#334155',
+                            }}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+
+                          <Link
+                            to="/map"
+                            style={{
+                              background: '#f8fafc',
+                              color: '#1e293b',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '6px',
+                              padding: '0.4rem 0.75rem',
+                              fontSize: '0.82rem',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                            }}
+                          >
+                            🗺️ Map Pin
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* Vulnerability factors bar */}
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          padding: '0.6rem 0.9rem',
+                          borderRadius: '8px',
+                          margin: '0.8rem 0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.8rem',
+                          flexWrap: 'wrap',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        <strong style={{ color: '#334155' }}>Vulnerabilities:</strong>
+                        {v.pregnantWomen > 0 && (
+                          <span style={{ background: '#fee2e2', color: '#991b1b', padding: '0.15rem 0.5rem', borderRadius: 4, fontWeight: 700 }}>
+                            🤰 {v.pregnantWomen} Pregnant
+                          </span>
+                        )}
+                        {v.injured > 0 && (
+                          <span style={{ background: '#fee2e2', color: '#991b1b', padding: '0.15rem 0.5rem', borderRadius: 4, fontWeight: 700 }}>
+                            🩹 {v.injured} Injured
+                          </span>
+                        )}
+                        {v.children > 0 && (
+                          <span style={{ background: '#dbeafe', color: '#1e40af', padding: '0.15rem 0.5rem', borderRadius: 4, fontWeight: 700 }}>
+                            👶 {v.children} Children
+                          </span>
+                        )}
+                        {v.elderly > 0 && (
+                          <span style={{ background: '#fef3c7', color: '#92400e', padding: '0.15rem 0.5rem', borderRadius: 4, fontWeight: 700 }}>
+                            👵 {v.elderly} Elderly
+                          </span>
+                        )}
+                        {!v.pregnantWomen && !v.injured && !v.children && !v.elderly && (
+                          <span style={{ color: '#64748b' }}>Standard vulnerability</span>
+                        )}
+                        <span style={{ marginLeft: 'auto', color: '#475569', fontWeight: 600 }}>
+                          👥 Group Count: {sos.numberOfPeople} people
+                        </span>
+                      </div>
+
+                      {/* Needs & Location */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.6rem', fontSize: '0.88rem' }}>
+                        <div>
+                          <strong>Urgent Needs:</strong>{' '}
+                          {(sos.needs || []).map((n) => (
+                            <span
+                              key={n}
+                              style={{
+                                background: '#fee2e2',
+                                color: '#991b1b',
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: 4,
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                marginRight: '0.3rem',
+                                textTransform: 'capitalize',
+                              }}
+                            >
+                              {n}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div>
+                          <strong>Location:</strong>{' '}
+                          {sos.location?.address ? `${sos.location.address} ` : ''}
+                          <a
+                            href={`https://www.google.com/maps?q=${sos.location?.latitude},${sos.location?.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#1a237e', textDecoration: 'underline' }}
+                          >
+                            ({sos.location?.latitude?.toFixed(4)}, {sos.location?.longitude?.toFixed(4)}) ↗
+                          </a>
+                        </div>
+
+                        {sos.assignedVolunteer && (
+                          <div>
+                            <strong>Assigned Field Volunteer:</strong>{' '}
+                            <span style={{ color: '#15803d', fontWeight: 700 }}>
+                              {sos.assignedVolunteer.name} ({sos.assignedVolunteer.email})
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {sos.description && (
+                        <div style={{ marginTop: '0.6rem', background: '#fefce8', padding: '0.5rem 0.8rem', borderRadius: 6, fontSize: '0.85rem', color: '#854d0e', fontStyle: 'italic' }}>
+                          "{sos.description}"
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'tasks' && (
           <div className="dashboard-card">
@@ -1034,6 +1477,88 @@ function DashboardAdmin() {
                   }}
                 >
                   {reassigning ? 'Reassigning...' : 'Confirm Reassign'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Volunteer to SOS Modal (Module 2 - Member 2) */}
+      {assigningSOS && (
+        <div className="modal-overlay" onClick={() => setAssigningSOS(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>
+              🚨 Dispatch Volunteer to SOS #{assigningSOS._id.slice(-6).toUpperCase()}
+            </h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.2rem' }}>
+              Victim: <strong>{assigningSOS.victimName}</strong> | Needs: <strong>{assigningSOS.needTypes?.join(', ')}</strong> | Priority Score: <span style={{ fontWeight: 800, color: assigningSOS.priorityScore >= 70 ? '#dc2626' : '#d97706' }}>{assigningSOS.priorityScore || 0}/100</span>
+            </p>
+
+            <form onSubmit={handleAssignSOSToVolunteer}>
+              <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#334155' }}>Select Volunteer</label>
+                <select
+                  required
+                  value={assignSOSVolunteerId}
+                  onChange={(e) => setAssignSOSVolunteerId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem 0.8rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.92rem',
+                  }}
+                >
+                  <option value="">— Select an available volunteer —</option>
+                  {volunteers
+                    .filter((v) => v.availability === 'Available' || v.status === 'Active')
+                    .map((v) => (
+                      <option key={v._id} value={v._id}>
+                        {v.name} ({v.serviceArea || 'General Area'}) — {v.skills?.join(', ') || 'General Relief'}
+                      </option>
+                    ))}
+                  {volunteers.filter((v) => v.availability === 'Available' || v.status === 'Active').length === 0 && (
+                    volunteers.map((v) => (
+                      <option key={v._id} value={v._id}>
+                        {v.name} ({v.serviceArea || 'General Area'})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setAssigningSOS(null)}
+                  style={{
+                    background: '#f1f5f9',
+                    color: '#475569',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.6rem 1.2rem',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={assigningSOSLoading || !assignSOSVolunteerId}
+                  style={{
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.6rem 1.2rem',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    opacity: assigningSOSLoading || !assignSOSVolunteerId ? 0.6 : 1,
+                  }}
+                >
+                  {assigningSOSLoading ? 'Dispatching...' : 'Dispatch Volunteer'}
                 </button>
               </div>
             </form>

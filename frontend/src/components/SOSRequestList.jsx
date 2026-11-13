@@ -242,10 +242,99 @@ export default function SOSRequestList({ refreshTrigger }) {
                     >
                       {cfg.label}
                     </span>
+                    {sos.priorityScore !== undefined && (
+                      <span
+                        style={{
+                          background:
+                            sos.priorityScore >= 70 ? '#fee2e2' : sos.priorityScore >= 45 ? '#fef3c7' : '#e0f2fe',
+                          color:
+                            sos.priorityScore >= 70 ? '#991b1b' : sos.priorityScore >= 45 ? '#92400e' : '#075985',
+                          border: `1px solid ${
+                            sos.priorityScore >= 70 ? '#fca5a5' : sos.priorityScore >= 45 ? '#fcd34d' : '#bae6fd'
+                          }`,
+                          padding: '0.25rem 0.65rem',
+                          borderRadius: '20px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                        }}
+                      >
+                        ⚡ Priority Score: {sos.priorityScore}/100 ({sos.priority || 'High'})
+                      </span>
+                    )}
                     <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
                       Submitted: {new Date(sos.createdAt).toLocaleString()}
                     </span>
                   </div>
+
+                  {sos.vulnerabilities &&
+                    (sos.vulnerabilities.children > 0 ||
+                      sos.vulnerabilities.elderly > 0 ||
+                      sos.vulnerabilities.pregnantWomen > 0 ||
+                      sos.vulnerabilities.injured > 0) && (
+                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                        {sos.vulnerabilities.pregnantWomen > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              background: '#fee2e2',
+                              color: '#991b1b',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: 4,
+                              fontWeight: 700,
+                              border: '1px solid #fca5a5',
+                            }}
+                          >
+                            🤰 {sos.vulnerabilities.pregnantWomen} Pregnant
+                          </span>
+                        )}
+                        {sos.vulnerabilities.injured > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              background: '#fee2e2',
+                              color: '#991b1b',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: 4,
+                              fontWeight: 700,
+                              border: '1px solid #fca5a5',
+                            }}
+                          >
+                            🩹 {sos.vulnerabilities.injured} Injured
+                          </span>
+                        )}
+                        {sos.vulnerabilities.children > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: 4,
+                              fontWeight: 700,
+                              border: '1px solid #bfdbfe',
+                            }}
+                          >
+                            👶 {sos.vulnerabilities.children} Children
+                          </span>
+                        )}
+                        {sos.vulnerabilities.elderly > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: 4,
+                              fontWeight: 700,
+                              border: '1px solid #fde68a',
+                            }}
+                          >
+                            👵 {sos.vulnerabilities.elderly} Elderly
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                   <div style={{ fontSize: '0.86rem', color: cfg.color, marginTop: '0.4rem', fontWeight: 500 }}>
                     {cfg.desc}
                   </div>

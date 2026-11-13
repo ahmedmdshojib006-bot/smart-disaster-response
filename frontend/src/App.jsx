@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import AdminUserManagement from './pages/AdminUserManagement.jsx';
 import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
+import DisasterMapPage from './pages/DisasterMapPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -172,6 +173,24 @@ function App() {
         element={
           <ProtectedRoute>
             <SheltersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/map"
+        element={
+          <ProtectedRoute>
+            <DisasterMapPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/disaster-map"
+        element={
+          <ProtectedRoute>
+            <DisasterMapPage />
           </ProtectedRoute>
         }
       />

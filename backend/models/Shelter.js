@@ -8,6 +8,15 @@ const shelterSchema = new mongoose.Schema({
     maxlength: 150,
   },
   location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: [0, 0],
+    },
     latitude: {
       type: Number,
       required: true,
@@ -89,6 +98,21 @@ const shelterSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+});
+
+shelterSchema.index({ 'location.coordinates': '2dsphere' });
+shelterSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
+
+shelterSchema.pre('save', function (next) {
+  if (
+    this.location &&
+    typeof this.location.latitude === 'number' &&
+    typeof this.location.longitude === 'number'
+  ) {
+    this.location.type = 'Point';
+    this.location.coordinates = [this.location.longitude, this.location.latitude];
+  }
+  next();
 });
 
 shelterSchema.methods.getAvailableSpots = function () {
