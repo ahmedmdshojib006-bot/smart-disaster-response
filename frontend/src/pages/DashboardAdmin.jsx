@@ -282,6 +282,25 @@ function DashboardAdmin() {
               >
                 ➕ Assign Task
               </button>
+
+              <Link
+                to="/resources"
+                style={{
+                  background: '#059669',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.2rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  boxShadow: '0 2px 6px rgba(5,150,105,0.25)',
+                }}
+              >
+                📦 Relief Resources
+              </Link>
             </div>
           </div>
 

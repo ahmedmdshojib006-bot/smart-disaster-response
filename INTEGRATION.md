@@ -506,3 +506,110 @@ Tasks are assigned by Administrators to Volunteers and proceed through a strictl
 - `PUT /api/tasks/:id/assign` — (Admin) Reassign task to a different volunteer.
 - `DELETE /api/tasks/:id` — (Admin) Delete / cancel task.
 
+---
+
+## 10. Module 2: Relief Operations & Resource Monitoring (Member-3: Minhaz Chowdhury)
+
+### 10.1 Feature Overview
+Admins and NGOs can track resource inventory and distribution across disaster zones in Bangladesh, including real-time stock levels of Food, Water, Medicine, and Blankets, along with transparent audit logs of where, when, and how much has been distributed to shelters, relief camps, and affected communities.
+
+### 10.2 Key Capabilities
+1. **Multi-Category Stockpile Tracking**:
+   - Manages stock levels across **Food** (rice, high-energy biscuits, baby food), **Water** (bottled water, purification tablets, jerrycans), **Medicine** (ORS sachets, trauma kits, waterborne disease antibiotics), **Blankets** (fleece thermal blankets, waterproof sleeping mats), and Emergency Kits.
+   - Real-time stock status computation: `In Stock`, `Low Stock`, and `Out of Stock`.
+2. **Server-Enforced Atomic Stock Deductions**:
+   - Prevents over-distribution by verifying `quantityAvailable >= requestedQuantity` atomically before recording deliveries.
+   - Automatically decrements available inventory and increments cumulative distributed totals.
+   - Restores/refunds stock if a distribution operation is cancelled.
+3. **Transparent Distribution Audit Logging**:
+   - Records recipient type (`Shelter`, `Relief Camp`, `Affected Community`, `Household`, `Individual`), target district, upazila, estimated beneficiaries reached, transport method, and the authorized distributor (`Admin` or `NGO`).
+   - Seamlessly integrates with Member-1's Shelter system by linking shelter destinations directly.
+4. **Real-Time WebSockets (Socket.IO)**:
+   - Emits instant updates for `resource:created`, `resource:updated`, `resource:restocked`, `resource:distributed`, and high-priority `resource:low_stock_alert`.
+
+### 10.3 API Endpoints
+
+#### GET `/api/resources`
+Retrieve all inventory resources with filters. **Requires Auth.**
+- Query params: `search`, `category`, `status`, `district`, `lowStockOnly`
+- Returns: `{ success: true, count, resources }`
+
+#### GET `/api/resources/stats`
+Aggregated platform metrics. **Requires Auth.**
+- Returns:
+  ```json
+  {
+    "success": true,
+    "stats": {
+      "totalItems": 15,
+      "totalAvailableStock": 8140,
+      "totalDistributedStock": 3745,
+      "lowStockCount": 3,
+      "outOfStockCount": 2,
+      "totalDistributionsCount": 42,
+      "totalBeneficiariesReached": 12850,
+      "categoryBreakdown": [
+        { "category": "Food", "available": 742, "distributed": 808, "itemCount": 4 },
+        { "category": "Water", "available": 5718, "distributed": 2282, "itemCount": 3 },
+        { "category": "Medicine", "available": 423, "distributed": 327, "itemCount": 3 },
+        { "category": "Blankets", "available": 1270, "distributed": 780, "itemCount": 3 }
+      ],
+      "topDistricts": [
+        { "district": "Feni", "totalQuantity": 1650 },
+        { "district": "Sylhet", "totalQuantity": 1120 }
+      ]
+    }
+  }
+  ```
+
+#### POST `/api/resources`
+Create a new relief supply item. **Requires Role: Admin or NGO.**
+- Payload:
+  ```json
+  {
+    "name": "Miniket Rice (25kg bags)",
+    "category": "Food",
+    "unit": "bags",
+    "quantityAvailable": 500,
+    "thresholdLowStock": 80,
+    "warehouseDistrict": "Feni",
+    "warehouseName": "Feni Central Relief Depot",
+    "donorName": "Bangladesh Red Crescent Society (BDRCS)",
+    "notes": "Store in elevated dry pallets"
+  }
+  ```
+
+#### POST `/api/resources/distribute`
+Log relief delivery and deduct stock atomically. **Requires Role: Admin or NGO.**
+- Payload:
+  ```json
+  {
+    "resourceId": "66f1234...",
+    "quantity": 50,
+    "recipientType": "Shelter",
+    "shelterId": "66e5678...",
+    "destinationName": "Sylhet Govt College Shelter",
+    "district": "Sylhet",
+    "upazila": "Sylhet Sadar",
+    "beneficiaryCount": 180,
+    "transportMethod": "Rescue Speedboat",
+    "notes": "Emergency meal supplies delivered."
+  }
+  ```
+
+#### POST `/api/resources/:id/restock`
+Add incoming stock to an existing item. **Requires Role: Admin or NGO.**
+- Payload:
+  ```json
+  {
+    "quantityToAdd": 100,
+    "donorName": "UNICEF Bangladesh",
+    "notes": "New replenishment shipment arrived."
+  }
+  ```
+
+#### GET `/api/resources/distributions/history`
+Fetch distribution audit records with filtering. **Requires Auth.**
+- Query params: `resourceId`, `category`, `district`, `recipientType`, `limit`
+
+

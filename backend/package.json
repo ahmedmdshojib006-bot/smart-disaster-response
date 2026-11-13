@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed:admin": "node scripts/createAdmin.js",
     "seed:shelters": "node scripts/seedShelters.js",
+    "seed:resources": "node scripts/seedResources.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {

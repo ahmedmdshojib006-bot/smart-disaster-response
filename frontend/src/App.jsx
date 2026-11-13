@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import AdminUserManagement from './pages/AdminUserManagement.jsx';
 import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
+import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -172,6 +173,24 @@ function App() {
         element={
           <ProtectedRoute>
             <SheltersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/resources"
+        element={
+          <ProtectedRoute>
+            <ResourceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/inventory"
+        element={
+          <ProtectedRoute>
+            <ResourceManagementPage />
           </ProtectedRoute>
         }
       />
