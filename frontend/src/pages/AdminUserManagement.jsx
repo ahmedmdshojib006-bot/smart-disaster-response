@@ -27,6 +27,7 @@ export default function AdminUserManagement() {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
+    setActionMsg({ type: '', text: '' });
     try {
       const params = new URLSearchParams({ page, limit: 10 });
       if (search) params.append('search', search);
