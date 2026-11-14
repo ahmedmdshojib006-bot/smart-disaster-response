@@ -39,8 +39,8 @@ function DashboardAdmin() {
 
   // Module 2 (Member-2): SOS Emergency Request State & Priority Triage
   const [sosRequests, setSosRequests] = useState([]);
-  const [sosFilterStatus, setSosFilterStatus] = useState('All');
-  const [sosFilterPriority, setSosFilterPriority] = useState('All');
+  const [sosStatusFilter, setSosStatusFilter] = useState('All');
+  const [sosPriorityFilter, setSosPriorityFilter] = useState('All');
   const [sosSearchTerm, setSosSearchTerm] = useState('');
   const [assigningSOS, setAssigningSOS] = useState(null);
   const [assignSOSVolunteerId, setAssignSOSVolunteerId] = useState('');
