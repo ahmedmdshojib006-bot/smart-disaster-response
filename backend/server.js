@@ -16,6 +16,7 @@ const profileRoutes = require('./routes/profileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const shelterRoutes = require('./routes/shelterRoutes');
 const mapRoutes = require('./routes/mapRoutes');
+const resourceRoutes = require('./routes/resourceRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/shelters', shelterRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/resources', resourceRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -99,12 +101,12 @@ const startServer = async () => {
     await connectDB();
 
     httpServer.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`   Health check: http://localhost:${PORT}/api/health`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/api/health`);
     });
 
     initSocket(io);
-    console.log('⚡ Socket.IO initialised');
+    console.log('Socket.IO initialised');
   } catch (error) {
     console.error('Failed to start server:', error.message);
     process.exit(1);

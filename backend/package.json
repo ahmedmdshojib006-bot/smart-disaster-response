@@ -9,6 +9,7 @@
     "seed:admin": "node scripts/createAdmin.js",
     "seed:shelters": "node scripts/seedShelters.js",
     "seed:map": "node scripts/seedMapData.js",
+    "seed:resources": "node scripts/seedResources.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {

@@ -18,6 +18,7 @@ import AdminUserManagement from './pages/AdminUserManagement.jsx';
 import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
 import DisasterMapPage from './pages/DisasterMapPage.jsx';
+import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -194,6 +195,25 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/resources"
+        element={
+          <ProtectedRoute>
+            <ResourceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/inventory"
+        element={
+          <ProtectedRoute>
+            <ResourceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       <Route path="*" element={<NotFoundPage />} />
@@ -202,4 +222,3 @@ function App() {
 }
 
 export default App;
-
