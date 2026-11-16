@@ -1,12 +1,3 @@
-// backend/scripts/seedResources.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Database Seeder for Relief Resources & Distribution Records (Member-3: Module 2).
-// Populates realistic emergency supplies (Food, Water, Medicine, Blankets)
-// across Bangladesh flood and cyclone response centers.
-//
-// Run via: npm run seed:resources
-// ─────────────────────────────────────────────────────────────────────────────
-
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Resource = require('../models/Resource');
@@ -15,11 +6,11 @@ let Shelter = null;
 try {
   Shelter = require('../models/Shelter');
 } catch (e) {
-  // Graceful fallback
+
 }
 
 const resourcesData = [
-  // ── Food Supplies ──────────────────────────────────────────────────────────
+
   {
     name: 'Miniket Rice Relief Bags (25kg)',
     category: 'Food',
@@ -97,7 +88,6 @@ const resourcesData = [
     notes: 'Stock completely exhausted after recent high tides in Companiganj.',
   },
 
-  // ── Water Supplies ─────────────────────────────────────────────────────────
   {
     name: 'Purified Bottled Drinking Water (5 Litres)',
     category: 'Water',
@@ -156,7 +146,7 @@ const resourcesData = [
     notes: 'Food-grade plastic containers for community water carriage.',
   },
 
-  // ── Medicine Supplies ──────────────────────────────────────────────────────
+
   {
     name: 'Oral Rehydration Solution (ORS) Sachets (Boxes of 100)',
     category: 'Medicine',
@@ -215,7 +205,7 @@ const resourcesData = [
     notes: 'Critical shortage! Resupply needed urgently for remote haor health camps.',
   },
 
-  // ── Blankets & Thermal Supplies ───────────────────────────────────────────
+
   {
     name: 'Heavy Fleece Thermal Blankets (Winter & Storm Relief)',
     category: 'Blankets',
@@ -274,7 +264,7 @@ const resourcesData = [
     notes: 'All blankets distributed to submerged coastal villages in Subarnachar.',
   },
 
-  // ── Emergency Kits & Sanitation ────────────────────────────────────────────
+
   {
     name: 'Family Hygiene & Sanitation Kits',
     category: 'Sanitation',
@@ -327,7 +317,7 @@ async function seed() {
     await mongoose.connect(uri);
     console.log('Connected to MongoDB successfully.');
 
-    // Look for existing shelters to link
+  
     let existingShelters = [];
     if (Shelter) {
       existingShelters = await Shelter.find().limit(5).lean();
@@ -341,7 +331,7 @@ async function seed() {
     const insertedResources = await Resource.insertMany(resourcesData);
     console.log(`Inserted ${insertedResources.length} resources.`);
 
-    // Seed realistic distributions
+
     const distributionsData = [
       {
         resource: insertedResources[0]._id, // Rice
@@ -368,7 +358,7 @@ async function seed() {
         notes: 'Delivered for daily meal program serving 350 displaced citizens.',
       },
       {
-        resource: insertedResources[4]._id, // Purified Water
+        resource: insertedResources[4]._id, 
         resourceName: insertedResources[4].name,
         category: insertedResources[4].category,
         quantity: 400,
@@ -390,7 +380,7 @@ async function seed() {
         notes: 'Clean water delivered directly to marooned rooftop families.',
       },
       {
-        resource: insertedResources[7]._id, // ORS Sachets
+        resource: insertedResources[7]._id, 
         resourceName: insertedResources[7].name,
         category: insertedResources[7].category,
         quantity: 150,
@@ -412,7 +402,7 @@ async function seed() {
         notes: 'Replenished medical clinic stock to address post-flood gastrointestinal cases.',
       },
       {
-        resource: insertedResources[10]._id, // Thermal Blankets
+        resource: insertedResources[10]._id, 
         resourceName: insertedResources[10].name,
         category: insertedResources[10].category,
         quantity: 200,
