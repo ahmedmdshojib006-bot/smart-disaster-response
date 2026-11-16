@@ -1,10 +1,3 @@
-// backend/models/Resource.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema for Relief Resource Inventory (Member-3: Module 2).
-// Tracks stock levels of Food, Water, Medicine, Blankets, and other essential
-// supplies across relief warehouses and districts in Bangladesh.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const resourceSchema = new mongoose.Schema(
@@ -126,12 +119,10 @@ const resourceSchema = new mongoose.Schema(
   }
 );
 
-// ── Compound Indexes for Fast Searching & Filtering ──────────────────────────
 resourceSchema.index({ category: 1, status: 1 });
 resourceSchema.index({ 'warehouse.district': 1, category: 1 });
 resourceSchema.index({ name: 'text', 'warehouse.name': 'text', 'warehouse.district': 'text' });
 
-// ── Pre-save Hook: Compute Dynamic Stock Status ──────────────────────────────
 resourceSchema.pre('save', function (next) {
   if (this.quantityAvailable <= 0) {
     this.status = 'Out of Stock';
@@ -143,7 +134,6 @@ resourceSchema.pre('save', function (next) {
   next();
 });
 
-// ── Instance Method: Helper to check if item can fulfill quantity ────────────
 resourceSchema.methods.canFulfill = function (qty) {
   return typeof qty === 'number' && qty > 0 && this.quantityAvailable >= qty;
 };
