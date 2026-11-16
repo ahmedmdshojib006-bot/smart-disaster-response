@@ -1,9 +1,4 @@
-// backend/controllers/resourceController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Controller for Resource Inventory & Distribution Tracking (Member-3: Module 2).
-// Implements full inventory management, atomic stock deductions, live low-stock
-// alerts, distribution audit logging, and aggregated relief analytics.
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 const Resource = require('../models/Resource');
 const DistributionRecord = require('../models/DistributionRecord');
@@ -11,10 +6,10 @@ let Shelter = null;
 try {
   Shelter = require('../models/Shelter');
 } catch (e) {
-  // Graceful fallback if Shelter model is not loaded
+
 }
 
-// Helper to broadcast socket events safely
+
 const broadcastSocket = (req, event, data) => {
   try {
     const io = req.app ? req.app.get('io') : null;
@@ -26,8 +21,7 @@ const broadcastSocket = (req, event, data) => {
   }
 };
 
-// ── 1. GET /api/resources ─────────────────────────────────────────────────────
-// Retrieve all resources with multi-field search and filters
+
 const getAllResources = async (req, res) => {
   try {
     const { search, category, status, district, lowStockOnly } = req.query;
@@ -79,8 +73,7 @@ const getAllResources = async (req, res) => {
   }
 };
 
-// ── 2. GET /api/resources/stats ───────────────────────────────────────────────
-// Aggregated metrics for relief resources and distributions
+
 const getResourceStats = async (req, res) => {
   try {
     const resources = await Resource.find().lean();
@@ -159,8 +152,7 @@ const getResourceStats = async (req, res) => {
   }
 };
 
-// ── 3. GET /api/resources/:id ─────────────────────────────────────────────────
-// Get single resource item and its distribution log
+
 const getResourceById = async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id)
@@ -194,8 +186,7 @@ const getResourceById = async (req, res) => {
   }
 };
 
-// ── 4. POST /api/resources ────────────────────────────────────────────────────
-// Create a new relief resource item (Admin or NGO)
+
 const createResource = async (req, res) => {
   try {
     const {
@@ -279,8 +270,7 @@ const createResource = async (req, res) => {
   }
 };
 
-// ── 5. PUT /api/resources/:id ─────────────────────────────────────────────────
-// Update resource metadata or warehouse info (Admin or NGO)
+
 const updateResource = async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id);
@@ -342,8 +332,7 @@ const updateResource = async (req, res) => {
   }
 };
 
-// ── 6. POST /api/resources/:id/restock ────────────────────────────────────────
-// Add additional stock to an existing inventory item (Admin or NGO)
+
 const restockResource = async (req, res) => {
   try {
     const { quantityToAdd, donorName, notes } = req.body;
@@ -397,8 +386,7 @@ const restockResource = async (req, res) => {
   }
 };
 
-// ── 7. POST /api/resources/distribute ─────────────────────────────────────────
-// Record a distribution and atomically decrement inventory stock (Admin or NGO)
+
 const recordDistribution = async (req, res) => {
   try {
     const {
@@ -436,7 +424,7 @@ const recordDistribution = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Resource not found in inventory' });
     }
 
-    // Atomic Stock Validation: Prevent distributing more than on-hand stock
+    
     if (resource.quantityAvailable < qty) {
       return res.status(400).json({
         success: false,
@@ -452,7 +440,7 @@ const recordDistribution = async (req, res) => {
           shelterName = shelterDoc.name;
         }
       } catch (e) {
-        // Continue if shelter lookup is optional
+      
       }
     }
 
@@ -460,12 +448,11 @@ const recordDistribution = async (req, res) => {
       ? destinationName.trim()
       : (shelterName || `${district.trim()} Relief Camp`);
 
-    // Decrement stock and increment total distributed
     resource.quantityAvailable -= qty;
     resource.totalDistributed = (resource.totalDistributed || 0) + qty;
     await resource.save();
 
-    // Create immutable distribution record
+  
     const distribution = new DistributionRecord({
       resource: resource._id,
       resourceName: resource.name,
@@ -493,7 +480,7 @@ const recordDistribution = async (req, res) => {
 
     await distribution.save();
 
-    // Broadcast distribution event to connected clients
+  
     broadcastSocket(req, 'resource:distributed', {
       distributionId: distribution._id,
       resourceId: resource._id,
@@ -506,7 +493,7 @@ const recordDistribution = async (req, res) => {
       status: resource.status,
     });
 
-    // If stock hit Low Stock or Out of Stock, broadcast high-priority low-stock alert
+   
     if (resource.status === 'Low Stock' || resource.status === 'Out of Stock') {
       broadcastSocket(req, 'resource:low_stock_alert', {
         resourceId: resource._id,
@@ -541,8 +528,7 @@ const recordDistribution = async (req, res) => {
   }
 };
 
-// ── 8. GET /api/resources/distributions/history ───────────────────────────────
-// Get filtered distribution audit log
+
 const getDistributionHistory = async (req, res) => {
   try {
     const { resourceId, category, district, recipientType, limit } = req.query;
@@ -579,8 +565,7 @@ const getDistributionHistory = async (req, res) => {
   }
 };
 
-// ── 9. PUT /api/resources/distributions/:id/status ────────────────────────────
-// Update status of a distribution (e.g. Delivered or Cancelled with refund)
+
 const updateDistributionStatus = async (req, res) => {
   try {
     const { status, notes } = req.body;
@@ -629,8 +614,8 @@ const updateDistributionStatus = async (req, res) => {
   }
 };
 
-// ── 10. DELETE /api/resources/:id ─────────────────────────────────────────────
-// Admin-only deletion of a resource inventory item
+
+
 const deleteResource = async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id);
