@@ -1,25 +1,10 @@
-// controllers/mapController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Live Disaster Map Controller (Member-2)
-//
-// Implements geospatial operations using MongoDB 2dsphere indexes ($near / $geoNear)
-// for real-time tracking of:
-//   - SOS Requests (color-coded by priority score)
-//   - Shelters (live capacity & facilities)
-//   - Hazard Zones (flooded roads, broken bridges, danger radius circles)
-//   - Relief Camps (food, water, medicine distribution centers)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const SOSRequest = require('../models/SOSRequest');
 const Shelter = require('../models/Shelter');
 const HazardZone = require('../models/HazardZone');
 const ReliefCamp = require('../models/ReliefCamp');
 
-/**
- * Haversine formula helper to compute distance (in kilometers) between two coordinates
- */
 const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -32,10 +17,6 @@ const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
   return parseFloat((R * c).toFixed(2));
 };
 
-/**
- * GET /api/map/all
- * Fetch all map entities formatted for Leaflet visualization
- */
 const getAllMapData = async (req, res) => {
   try {
     const { status, district } = req.query;
@@ -66,7 +47,6 @@ const getAllMapData = async (req, res) => {
       ReliefCamp.find(reliefFilter).sort({ createdAt: -1 }).lean(),
     ]);
 
-    // Format SOS markers
     const sosMarkers = sosList
       .filter((s) => s.location?.latitude && s.location?.longitude)
       .map((s) => ({
@@ -90,7 +70,6 @@ const getAllMapData = async (req, res) => {
         createdAt: s.createdAt,
       }));
 
-    // Format Shelter markers
     const shelterMarkers = shelterList
       .filter((sh) => sh.location?.latitude && sh.location?.longitude)
       .map((sh) => {
@@ -113,7 +92,6 @@ const getAllMapData = async (req, res) => {
         };
       });
 
-    // Format Hazard Zone circles & markers
     const hazardMarkers = hazardList
       .filter((h) => h.location?.latitude && h.location?.longitude)
       .map((h) => ({
@@ -133,7 +111,6 @@ const getAllMapData = async (req, res) => {
         createdAt: h.createdAt,
       }));
 
-    // Format Relief Camp markers
     const reliefMarkers = reliefList
       .filter((rc) => rc.location?.latitude && rc.location?.longitude)
       .map((rc) => ({
@@ -153,7 +130,6 @@ const getAllMapData = async (req, res) => {
         notes: rc.notes || '',
       }));
 
-    // Summary statistics
     const stats = {
       totalSOS: sosMarkers.length,
       criticalSOS: sosMarkers.filter((s) => s.priorityScore >= 70).length,
@@ -184,11 +160,6 @@ const getAllMapData = async (req, res) => {
   }
 };
 
-/**
- * GET /api/map/nearby
- * Geospatial 2dsphere proximity search ($near)
- * Finds SOS requests, shelters, hazards, and relief camps within radius (km) of user's coordinates.
- */
 const getNearbyMapData = async (req, res) => {
   try {
     const { lat, lng, radius = 15, types } = req.query;
@@ -207,14 +178,13 @@ const getNearbyMapData = async (req, res) => {
 
     const point = {
       type: 'Point',
-      coordinates: [lngNum, latNum], // GeoJSON [longitude, latitude]
+      coordinates: [lngNum, latNum],
     };
 
     const typeFilter = types ? types.split(',').map((t) => t.trim().toLowerCase()) : null;
 
     const queries = [];
 
-    // 1. Nearby SOS Requests using 2dsphere $near
     if (!typeFilter || typeFilter.includes('sos')) {
       queries.push(
         SOSRequest.find({
@@ -242,7 +212,6 @@ const getNearbyMapData = async (req, res) => {
       queries.push(Promise.resolve([]));
     }
 
-    // 2. Nearby Shelters using 2dsphere $near
     if (!typeFilter || typeFilter.includes('shelters') || typeFilter.includes('shelter')) {
       queries.push(
         Shelter.find({
@@ -268,7 +237,6 @@ const getNearbyMapData = async (req, res) => {
       queries.push(Promise.resolve([]));
     }
 
-    // 3. Nearby Hazard Zones using 2dsphere $near
     if (!typeFilter || typeFilter.includes('hazards') || typeFilter.includes('hazard')) {
       queries.push(
         HazardZone.find({
@@ -294,7 +262,6 @@ const getNearbyMapData = async (req, res) => {
       queries.push(Promise.resolve([]));
     }
 
-    // 4. Nearby Relief Camps using 2dsphere $near
     if (!typeFilter || typeFilter.includes('reliefcamps') || typeFilter.includes('relief')) {
       queries.push(
         ReliefCamp.find({
@@ -346,10 +313,6 @@ const getNearbyMapData = async (req, res) => {
   }
 };
 
-/**
- * POST /api/map/hazards
- * Report or create a new Hazard Zone (Admin, NGO, or Volunteer)
- */
 const createHazardZone = async (req, res) => {
   try {
     const {
@@ -403,7 +366,6 @@ const createHazardZone = async (req, res) => {
 
     await hazard.save();
 
-    // Broadcast real-time hazard alert
     const io = req.app.get('io');
     if (io) {
       io.emit('hazard:created', hazard);
@@ -423,10 +385,6 @@ const createHazardZone = async (req, res) => {
   }
 };
 
-/**
- * POST /api/map/relief-camps
- * Register a new Relief Camp / Distribution Center (Admin or NGO)
- */
 const createReliefCamp = async (req, res) => {
   try {
     const {

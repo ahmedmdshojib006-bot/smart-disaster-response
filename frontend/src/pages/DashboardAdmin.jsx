@@ -37,7 +37,6 @@ function DashboardAdmin() {
   const [reassignVolunteerId, setReassignVolunteerId] = useState('');
   const [reassigning, setReassigning] = useState(false);
 
-  // Module 2 (Member-2): SOS Emergency Request State & Priority Triage
   const [sosRequests, setSosRequests] = useState([]);
   const [sosStatusFilter, setSosStatusFilter] = useState('All');
   const [sosPriorityFilter, setSosPriorityFilter] = useState('All');
@@ -645,7 +644,6 @@ function DashboardAdmin() {
                           </div>
                         </div>
 
-                        {/* Quick action buttons */}
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <button
                             type="button"
@@ -708,7 +706,6 @@ function DashboardAdmin() {
                         </div>
                       </div>
 
-                      {/* Vulnerability factors bar */}
                       <div
                         style={{
                           background: '#f8fafc',
@@ -751,7 +748,6 @@ function DashboardAdmin() {
                         </span>
                       </div>
 
-                      {/* Needs & Location */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.6rem', fontSize: '0.88rem' }}>
                         <div>
                           <strong>Urgent Needs:</strong>{' '}
@@ -1503,7 +1499,6 @@ function DashboardAdmin() {
         </div>
       )}
 
-      {/* Assign Volunteer to SOS Modal (Module 2 - Member 2) */}
       {assigningSOS && (
         <div className="modal-overlay" onClick={() => setAssigningSOS(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>

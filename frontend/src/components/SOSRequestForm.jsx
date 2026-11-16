@@ -1,17 +1,3 @@
-// ============================================================
-// src/components/SOSRequestForm.jsx — Emergency SOS Request Form
-//
-// Module 1 (Member-2):
-//   Victims can submit an SOS/help request with GPS location,
-//   type of need (food, water, medicine, rescue), number of people,
-//   and an optional photo.
-//
-// Module 2 (Member-2):
-//   - Vulnerability demographic factors (children, elderly people,
-//     pregnant women, injuries) for automated priority calculation.
-//   - Real-time priority preview meter and automated urgent triage.
-// ============================================================
-
 import React, { useState, useMemo } from 'react';
 import axiosInstance from '../api/axiosInstance.js';
 import { calculatePriorityScoreClient } from '../utils/priorityCalculatorClient.js';
@@ -24,7 +10,6 @@ const AVAILABLE_NEEDS = [
 ];
 
 function SOSRequestForm({ onSOSSubmitted }) {
-  // ── Form State ─────────────────────────────────────────────
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
@@ -36,7 +21,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [description, setDescription] = useState('');
 
-  // Module 2: Vulnerability demographic factor counters
   const [childrenCount, setChildrenCount] = useState(0);
   const [elderlyCount, setElderlyCount] = useState(0);
   const [pregnantCount, setPregnantCount] = useState(0);
@@ -49,7 +33,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // ── Module 2: Live Real-Time Priority Score Preview ───────
   const priorityCalculation = useMemo(() => {
     return calculatePriorityScoreClient({
       vulnerabilities: {
@@ -64,7 +47,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     });
   }, [childrenCount, elderlyCount, pregnantCount, injuredCount, selectedNeeds, numberOfPeople, description]);
 
-  // ── GPS Geolocation Handler ────────────────────────────────
   const handleDetectLocation = () => {
     setErrorMsg('');
     if (!navigator.geolocation) {
@@ -112,7 +94,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     );
   };
 
-  // ── Needs Toggle Handler ───────────────────────────────────
   const toggleNeed = (needId) => {
     setSelectedNeeds((prev) => {
       if (prev.includes(needId)) {
@@ -123,7 +104,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     });
   };
 
-  // ── Photo Selection & Preview Handler ──────────────────────
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -153,7 +133,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
     setPhotoPreview(null);
   };
 
-  // ── Form Submission ────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -197,7 +176,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
       formData.append('description', description);
       formData.append('needs', JSON.stringify(selectedNeeds));
 
-      // Module 2: Vulnerability Demographic Payload
       formData.append(
         'vulnerabilities',
         JSON.stringify({
@@ -226,7 +204,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           `🚨 Emergency SOS Dispatched! Priority Score: ${priorityScoreAssigned}/100 (${priorityTierAssigned}). Live alert broadcast to rescue teams.`
         );
 
-        // Reset form
         setDescription('');
         setPhotoFile(null);
         setPhotoPreview(null);
@@ -310,7 +287,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* 1. GPS Location */}
         <div className="sos-form-group">
           <label>
             1. GPS Location & Landmark <span className="required-star">*</span>
@@ -396,7 +372,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 2. Type of Need */}
         <div className="sos-form-group">
           <label>
             2. Type of Emergency Need <span className="required-star">*</span>{' '}
@@ -429,7 +404,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 3. Number of People */}
         <div className="sos-form-group">
           <label>
             3. Total Number of People in Group <span className="required-star">*</span>
@@ -468,7 +442,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 4. Module 2: Vulnerable Demographics (Priority Scoring Factors) */}
         <div className="sos-form-group" style={{ background: '#f8fafc', padding: '1.2rem', borderRadius: 10, border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
@@ -482,7 +455,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.9rem' }}>
-            {/* Children */}
             <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>👶 Children (&le; 12 yrs)</span>
@@ -512,7 +484,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
               </div>
             </div>
 
-            {/* Elderly */}
             <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>👵 Elderly (&ge; 60 yrs)</span>
@@ -542,7 +513,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
               </div>
             </div>
 
-            {/* Pregnant Women */}
             <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>🤰 Pregnant Women</span>
@@ -572,7 +542,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
               </div>
             </div>
 
-            {/* Injured / Medical */}
             <div style={{ background: '#fff', padding: '0.9rem', borderRadius: 8, border: '1px solid #cbd5e1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>🩹 Injured / Urgent Medical</span>
@@ -603,7 +572,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
             </div>
           </div>
 
-          {/* Real-Time Priority Score Preview Meter */}
           <div
             style={{
               marginTop: '1rem',
@@ -674,7 +642,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
                 </div>
               </div>
 
-              {/* Progress Bar */}
               <div style={{ width: '130px', height: '10px', background: '#e2e8f0', borderRadius: 5, overflow: 'hidden' }}>
                 <div
                   style={{
@@ -692,7 +659,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
               </div>
             </div>
 
-            {/* Factor Pills */}
             {priorityCalculation.factors.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.6rem' }}>
                 {priorityCalculation.factors.map((f, i) => (
@@ -714,7 +680,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 5. Optional Photo */}
         <div className="sos-form-group">
           <label>
             5. Optional Photo <span style={{ fontSize: '0.82rem', color: '#666' }}>(Camera or Gallery)</span>
@@ -755,7 +720,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           </div>
         </div>
 
-        {/* 6. Additional Description */}
         <div className="sos-form-group">
           <label>6. Additional Situation Details (Optional)</label>
           <textarea
@@ -768,7 +732,6 @@ function SOSRequestForm({ onSOSSubmitted }) {
           />
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="sos-submit-btn"
