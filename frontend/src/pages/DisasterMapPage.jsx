@@ -1,12 +1,3 @@
-// ============================================================
-// src/pages/DisasterMapPage.jsx — Live Disaster Map (Member-2)
-//
-// Module 2 (Member-2):
-//   Users can view a live disaster map (via Leaflet) showing SOS
-//   requests, shelters, hazard zones, and relief camps, using
-//   MongoDB’s 2dsphere geospatial queries to easily find nearby requests.
-// ============================================================
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,7 +6,6 @@ import axiosInstance from '../api/axiosInstance.js';
 import { useSocket } from '../context/SocketContext.jsx';
 import '../styles/map.css';
 
-// Fix default Leaflet icon paths in Vite/bundler environments
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -23,7 +13,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Key Bangladesh disaster hot-spot coordinates for fast navigation
 const REGION_PRESETS = [
   { name: '🇧🇩 Bangladesh Overview', lat: 23.685, lng: 90.3563, zoom: 7 },
   { name: '🌊 Feni Flood Zone', lat: 23.0159, lng: 91.3986, zoom: 12 },
@@ -41,7 +30,6 @@ function DisasterMapPage() {
 
   const { socket } = useSocket();
 
-  // ── State ───────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mapData, setMapData] = useState({
@@ -60,7 +48,6 @@ function DisasterMapPage() {
     activeReliefCamps: 0,
   });
 
-  // Layer filters
   const [showSOS, setShowSOS] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
   const [showHazards, setShowHazards] = useState(true);
@@ -68,21 +55,17 @@ function DisasterMapPage() {
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Proximity 2dsphere search state
   const [userCoords, setUserCoords] = useState(null);
   const [nearbyRadiusKm, setNearbyRadiusKm] = useState(15);
   const [isSearchingNearby, setIsSearchingNearby] = useState(false);
   const [nearbyStats, setNearbyStats] = useState(null);
 
-  // Active selected item for focus
   const [selectedSOSId, setSelectedSOSId] = useState(null);
 
-  // ── 1. Initialize Leaflet Map ───────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return; // Prevent double initialization
+    if (mapInstanceRef.current) return;
 
-    // Center on Bangladesh
     const map = L.map(mapContainerRef.current, {
       center: [23.685, 90.3563],
       zoom: 7,
@@ -91,17 +74,14 @@ function DisasterMapPage() {
       zoomControl: false,
     });
 
-    // Zoom control at top-left
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    // OpenStreetMap standard tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Bangladesh Disaster Response',
       maxZoom: 19,
     }).addTo(map);
 
-    // Feature group layers for markers and overlays
     const markersLayer = L.featureGroup().addTo(map);
     const circleLayer = L.featureGroup().addTo(map);
     const userLocationLayer = L.featureGroup().addTo(map);
@@ -117,7 +97,6 @@ function DisasterMapPage() {
     };
   }, []);
 
-  // ── 2. Fetch Map Data from Backend ──────────────────────────
   const fetchMapData = useCallback(async () => {
     try {
       setLoading(true);
@@ -139,7 +118,6 @@ function DisasterMapPage() {
     fetchMapData();
   }, [fetchMapData]);
 
-  // ── 3. Real-Time Socket.IO Synchronization ──────────────────
   useEffect(() => {
     if (!socket) return;
 
@@ -161,7 +139,6 @@ function DisasterMapPage() {
     };
   }, [socket, fetchMapData]);
 
-  // ── 4. Helper to create custom HTML Pin Icons ───────────────
   const createSOSIcon = (priority, status) => {
     let tierClass = 'high';
     let iconChar = '🚨';
@@ -220,23 +197,19 @@ function DisasterMapPage() {
     });
   };
 
-  // ── 5. Render Layers on Leaflet Map ─────────────────────────
   useEffect(() => {
     const map = mapInstanceRef.current;
     const markersLayer = markersLayerRef.current;
     const circleLayer = circleLayerRef.current;
     if (!map || !markersLayer || !circleLayer) return;
 
-    // Clear previous markers & circles
     markersLayer.clearLayers();
     circleLayer.clearLayers();
 
-    // ── Render Hazard Zones (with translucent danger circle) ──
     if (showHazards) {
       mapData.hazardZones.forEach((h) => {
         if (!h.lat || !h.lng) return;
 
-        // Radius danger circle
         const circle = L.circle([h.lat, h.lng], {
           radius: h.radiusMeters || 1500,
           color: h.severity === 'Critical' ? '#dc2626' : '#d97706',
@@ -247,7 +220,6 @@ function DisasterMapPage() {
         });
         circleLayer.addLayer(circle);
 
-        // Center Marker Pin
         const marker = L.marker([h.lat, h.lng], { icon: createHazardIcon() });
         const popupContent = `
           <div class="map-popup-card">
@@ -276,7 +248,6 @@ function DisasterMapPage() {
       });
     }
 
-    // ── Render Shelters ───────────────────────────────────────
     if (showShelters) {
       mapData.shelters.forEach((sh) => {
         if (!sh.lat || !sh.lng) return;
@@ -321,7 +292,6 @@ function DisasterMapPage() {
       });
     }
 
-    // ── Render Relief Camps ───────────────────────────────────
     if (showReliefCamps) {
       mapData.reliefCamps.forEach((rc) => {
         if (!rc.lat || !rc.lng) return;
@@ -353,7 +323,6 @@ function DisasterMapPage() {
       });
     }
 
-    // ── Render SOS Requests (Color-coded by Automated Priority Score) ─
     if (showSOS) {
       const filteredSOS = mapData.sosRequests.filter((s) => {
         if (priorityFilter !== 'All' && s.priority !== priorityFilter) return false;
@@ -437,7 +406,6 @@ function DisasterMapPage() {
     }
   }, [mapData, showSOS, showShelters, showHazards, showReliefCamps, priorityFilter]);
 
-  // ── 6. Geospatial 2dsphere Proximity Search ($near) ─────────
   const handleNearbySearch = () => {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by your browser.');
@@ -457,7 +425,6 @@ function DisasterMapPage() {
         if (map && userLocationLayer) {
           userLocationLayer.clearLayers();
 
-          // User blue pulsing marker
           const userIcon = L.divIcon({
             className: 'custom-leaflet-icon',
             html: `<div class="user-location-pin" title="Your GPS Location"></div>`,
@@ -468,7 +435,6 @@ function DisasterMapPage() {
           userMarker.bindPopup('<strong>📍 You are here</strong>').openPopup();
           userLocationLayer.addLayer(userMarker);
 
-          // Search Radius circle
           const searchCircle = L.circle([lat, lng], {
             radius: nearbyRadiusKm * 1000,
             color: '#2563eb',
@@ -479,20 +445,17 @@ function DisasterMapPage() {
           });
           userLocationLayer.addLayer(searchCircle);
 
-          // Pan and zoom to user's proximity area
           map.flyTo([lat, lng], nearbyRadiusKm <= 5 ? 13 : nearbyRadiusKm <= 15 ? 11 : 9, {
             duration: 1.2,
           });
         }
 
-        // Call backend MongoDB 2dsphere $near endpoint
         try {
           const res = await axiosInstance.get(
             `/api/map/nearby?lat=${lat}&lng=${lng}&radius=${nearbyRadiusKm}`
           );
           if (res.data?.success) {
             setNearbyStats(res.data.query);
-            // Re-render nearby dataset
             const nearbyRes = res.data.data;
             setMapData({
               sosRequests: nearbyRes.sosRequests.map((s) => ({
@@ -568,7 +531,6 @@ function DisasterMapPage() {
     );
   };
 
-  // ── 7. Pan to specific item on map from sidebar ─────────────
   const handleFocusItem = (item) => {
     setSelectedSOSId(item.id);
     const map = mapInstanceRef.current;
@@ -577,7 +539,6 @@ function DisasterMapPage() {
     }
   };
 
-  // ── 8. Region Fast Jump ─────────────────────────────────────
   const handleRegionJump = (region) => {
     const map = mapInstanceRef.current;
     if (map) {
@@ -585,7 +546,6 @@ function DisasterMapPage() {
     }
   };
 
-  // Sidebar list: SOS sorted by Priority Score descending
   const sortedSidebarSOS = mapData.sosRequests
     .filter((s) => {
       if (priorityFilter !== 'All' && s.priority !== priorityFilter) return false;
@@ -605,10 +565,8 @@ function DisasterMapPage() {
     <div className="map-page-container">
       <Navbar />
 
-      {/* ── Top Map Control & Filter Toolbar ─────────────────── */}
       <div className="map-toolbar">
         <div className="map-toolbar-left">
-          {/* Layer toggles */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginRight: '0.2rem' }}>
               LAYERS:
@@ -643,7 +601,6 @@ function DisasterMapPage() {
             </button>
           </div>
 
-          {/* Priority filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Urgency:</span>
             <select
@@ -668,7 +625,6 @@ function DisasterMapPage() {
         </div>
 
         <div className="map-toolbar-right">
-          {/* Geospatial 2dsphere Nearby Search */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <select
               value={nearbyRadiusKm}
@@ -697,7 +653,6 @@ function DisasterMapPage() {
             </button>
           </div>
 
-          {/* Region Fast Jump */}
           <select
             onChange={(e) => {
               const reg = REGION_PRESETS.find((r) => r.name === e.target.value);
@@ -720,7 +675,6 @@ function DisasterMapPage() {
             ))}
           </select>
 
-          {/* Reset / Refresh */}
           <button
             type="button"
             onClick={fetchMapData}
@@ -740,7 +694,6 @@ function DisasterMapPage() {
         </div>
       </div>
 
-      {/* Nearby 2dsphere Search Results Banner */}
       {nearbyStats && (
         <div
           style={{
@@ -779,9 +732,7 @@ function DisasterMapPage() {
         </div>
       )}
 
-      {/* ── Main Map + Sidebar Layout ────────────────────────── */}
       <div className="map-layout-body">
-        {/* Leaflet Map Canvas */}
         <div className="leaflet-map-wrapper">
           <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
@@ -807,10 +758,8 @@ function DisasterMapPage() {
           )}
         </div>
 
-        {/* Priority-Ranked Sidebar Feed */}
         <div className="map-sidebar">
           <div className="map-sidebar-header">
-            {/* Quick Stat Counters */}
             <div className="map-stats-strip">
               <div className="map-stat-box">
                 <div className="stat-val" style={{ color: '#dc2626' }}>
@@ -845,7 +794,6 @@ function DisasterMapPage() {
               <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sorted by Urgency Score</span>
             </div>
 
-            {/* Quick search input */}
             <input
               type="text"
               placeholder="Search by area or need..."
@@ -912,7 +860,6 @@ function DisasterMapPage() {
                       </div>
                     </div>
 
-                    {/* Vulnerability factors */}
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', margin: '0.5rem 0 0.3rem 0' }}>
                       {v.pregnantWomen > 0 && (
                         <span style={{ fontSize: '0.7rem', background: '#fee2e2', color: '#991b1b', padding: '0.1rem 0.35rem', borderRadius: 3, fontWeight: 700 }}>
@@ -944,7 +891,6 @@ function DisasterMapPage() {
                       )}
                     </div>
 
-                    {/* Needs tags */}
                     <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
                       {(sos.needs || []).map((need) => (
                         <span

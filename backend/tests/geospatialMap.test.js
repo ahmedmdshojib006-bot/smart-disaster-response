@@ -1,8 +1,3 @@
-// tests/geospatialMap.test.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Geospatial 2dsphere and Live Disaster Map Test Suite (Module 2 - Member-2)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 const SOSRequest = require('../models/SOSRequest');
 const HazardZone = require('../models/HazardZone');
@@ -42,12 +37,11 @@ describe('Module 2 (Member-2): Geospatial 2dsphere and Map Models', () => {
     const err = doc.validateSync();
     expect(err).toBeUndefined();
 
-    // Trigger schema save hook manually
     doc.location.type = 'Point';
     doc.location.coordinates = [doc.location.longitude, doc.location.latitude];
 
-    expect(doc.location.coordinates[0]).toBe(91.3986); // longitude first in GeoJSON
-    expect(doc.location.coordinates[1]).toBe(23.0159); // latitude second
+    expect(doc.location.coordinates[0]).toBe(91.3986);
+    expect(doc.location.coordinates[1]).toBe(23.0159);
   });
 
   it('should validate HazardZone model schema and 2dsphere index', () => {

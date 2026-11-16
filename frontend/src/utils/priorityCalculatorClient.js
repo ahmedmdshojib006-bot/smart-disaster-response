@@ -1,8 +1,3 @@
-// src/utils/priorityCalculatorClient.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Client-side Priority Score Calculator for instant live preview (Member-2)
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function calculatePriorityScoreClient({
   vulnerabilities = {},
   needs = [],

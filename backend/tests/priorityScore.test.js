@@ -1,8 +1,3 @@
-// tests/priorityScore.test.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Automated Priority Scoring Engine Test Suite (Module 2 - Member-2)
-// ─────────────────────────────────────────────────────────────────────────────
-
 const { calculatePriorityScore } = require('../utils/priorityCalculator');
 const SOSRequest = require('../models/SOSRequest');
 
@@ -26,7 +21,6 @@ describe('Module 2 (Member-2): Automated Priority Scoring Engine', () => {
     expect(result.vulnerabilities.injured).toBe(2);
     expect(result.vulnerabilities.children).toBe(2);
 
-    // Verify factor breakdown is provided
     const factorNames = result.factors.map((f) => f.factor);
     expect(factorNames).toContain('Pregnant Women');
     expect(factorNames).toContain('Injuries / Critical Medical');

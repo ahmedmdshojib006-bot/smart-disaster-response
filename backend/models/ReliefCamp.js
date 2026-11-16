@@ -1,9 +1,3 @@
-// models/ReliefCamp.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema and model for Relief Camps & Emergency Supply Distribution Points.
-// Module 2 (Member-2): Live Disaster Map with 2dsphere Geospatial Indexing
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const VALID_STATUSES = ['Active', 'Depleted', 'Closed'];
@@ -29,7 +23,7 @@ const reliefCampSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number],
         default: [0, 0],
       },
       latitude: {
@@ -93,11 +87,9 @@ const reliefCampSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes for geospatial proximity queries and status filtering ───────────
 reliefCampSchema.index({ 'location.coordinates': '2dsphere' });
 reliefCampSchema.index({ status: 1 });
 
-// ── Synchronize GeoJSON coordinates before saving ────────────────────────────
 reliefCampSchema.pre('save', function (next) {
   if (
     this.location &&

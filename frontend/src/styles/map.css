@@ -1,7 +1,3 @@
-/* ==============================================================
-   src/styles/map.css — Live Disaster Map Styling (Member-2)
-   ============================================================== */
-
 .map-page-container {
   min-height: calc(100vh - 60px);
   display: flex;
@@ -9,7 +5,6 @@
   background: #f1f5f9;
 }
 
-/* ── Top Map Controls Bar ────────────────────────────────────── */
 .map-toolbar {
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
@@ -37,7 +32,6 @@
   flex-wrap: wrap;
 }
 
-/* Layer filter pill buttons */
 .map-filter-btn {
   display: inline-flex;
   align-items: center;
@@ -82,7 +76,6 @@
   border-color: #d8b4fe;
 }
 
-/* GPS Nearby Search Button */
 .nearby-search-btn {
   background: #1a237e;
   color: #ffffff;
@@ -107,7 +100,6 @@
   cursor: not-allowed;
 }
 
-/* ── Split Layout (Map + Sidebar) ────────────────────────────── */
 .map-layout-body {
   flex: 1;
   display: flex;
@@ -161,7 +153,6 @@
   padding: 1rem;
 }
 
-/* ── Stats Summary Badges ────────────────────────────────────── */
 .map-stats-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -190,7 +181,6 @@
   font-weight: 600;
 }
 
-/* ── Custom Leaflet HTML Marker Pins ─────────────────────────── */
 .custom-leaflet-icon {
   background: transparent;
   border: none;
@@ -311,7 +301,6 @@
   }
 }
 
-/* ── Leaflet Popup Card Styling ──────────────────────────────── */
 .leaflet-popup-content-wrapper {
   border-radius: 12px !important;
   padding: 0 !important;
@@ -390,7 +379,6 @@
   border: 1px solid #cbd5e1;
 }
 
-/* ── Sidebar Request Card ────────────────────────────────────── */
 .sidebar-item-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;

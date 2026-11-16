@@ -1,23 +1,7 @@
-// controllers/sosController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Emergency SOS / Help Request Controller (Member-2)
-//
-// Module 1:
-//   - Submission, GPS handling, photos, filtering, and real-time alerts.
-// Module 2:
-//   - Automated Priority Score calculation based on vulnerability factors
-//     (children, elderly people, pregnant women, injuries, urgent needs).
-//   - Priority-ranked queries ensuring most urgent requests are at the top of admin list.
-//   - GeoJSON coordinates synchronization for MongoDB 2dsphere spatial indexing.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const SOSRequest = require('../models/SOSRequest');
 const { sendNotification } = require('../services/notificationService');
 const { calculatePriorityScore } = require('../utils/priorityCalculator');
 
-/**
- * Helper to parse needs input from JSON or multipart/form-data
- */
 const parseNeeds = (rawNeeds) => {
   if (!rawNeeds) return [];
   if (Array.isArray(rawNeeds)) return rawNeeds.map((n) => String(n).trim().toLowerCase());
@@ -26,7 +10,6 @@ const parseNeeds = (rawNeeds) => {
       const parsed = JSON.parse(rawNeeds);
       if (Array.isArray(parsed)) return parsed.map((n) => String(n).trim().toLowerCase());
     } catch {
-      // not JSON, fallback to comma split
     }
     return rawNeeds
       .split(',')
@@ -36,9 +19,6 @@ const parseNeeds = (rawNeeds) => {
   return [];
 };
 
-/**
- * Helper to parse vulnerability demographic factors
- */
 const parseVulnerabilities = (body) => {
   let parsed = {
     children: 0,
@@ -53,14 +33,12 @@ const parseVulnerabilities = (body) => {
         const obj = JSON.parse(body.vulnerabilities);
         parsed = { ...parsed, ...obj };
       } catch {
-        // ignore
       }
     } else if (typeof body.vulnerabilities === 'object') {
       parsed = { ...parsed, ...body.vulnerabilities };
     }
   }
 
-  // Also support direct top-level fields
   if (body.children !== undefined) parsed.children = parseInt(body.children, 10) || 0;
   if (body.elderly !== undefined) parsed.elderly = parseInt(body.elderly, 10) || 0;
   if (body.pregnantWomen !== undefined) parsed.pregnantWomen = parseInt(body.pregnantWomen, 10) || 0;
@@ -74,11 +52,6 @@ const parseVulnerabilities = (body) => {
   return parsed;
 };
 
-/**
- * POST /api/sos
- * Submit a new emergency SOS request
- * Authenticated user: Citizen / Victim (or any user in distress)
- */
 const createSOS = async (req, res) => {
   try {
     const {
@@ -92,7 +65,6 @@ const createSOS = async (req, res) => {
       priority: customPriority,
     } = req.body;
 
-    // ── 1. Validation ─────────────────────────────────────────────────────────
     const latNum = parseFloat(latitude);
     const lngNum = parseFloat(longitude);
 
@@ -136,13 +108,11 @@ const createSOS = async (req, res) => {
       });
     }
 
-    // ── 2. Handle Photo Upload ────────────────────────────────────────────────
     let photoUrl = req.body.photoUrl || null;
     if (req.file) {
       photoUrl = `/uploads/${req.file.filename}`;
     }
 
-    // ── 3. Module 2: Automated Priority Score Calculation ─────────────────────
     const parsedVulnerabilities = parseVulnerabilities(req.body);
 
     const priorityResult = calculatePriorityScore({
@@ -157,12 +127,11 @@ const createSOS = async (req, res) => {
       calculatedPriority = customPriority;
     }
 
-    // ── 4. Create and Save SOS Document ──────────────────────────────────────
     const newSOS = new SOSRequest({
       victim: req.user._id,
       location: {
         type: 'Point',
-        coordinates: [lngNum, latNum], // GeoJSON order: [longitude, latitude]
+        coordinates: [lngNum, latNum],
         latitude: latNum,
         longitude: lngNum,
         address: address ? String(address).trim() : '',
@@ -190,13 +159,11 @@ const createSOS = async (req, res) => {
     await newSOS.save();
     await newSOS.populate('victim', 'name email');
 
-    // ── 5. Trigger Real-Time Alerts via Notification Service & Socket.IO ─────
     const io = req.app.get('io');
     const locationStr = newSOS.location.address || `GPS (${latNum.toFixed(4)}, ${lngNum.toFixed(4)})`;
     const needsStr = needs.join(', ').toUpperCase();
 
     if (io) {
-      // 5a. Alert Volunteers
       try {
         await sendNotification({
           io,
@@ -211,7 +178,6 @@ const createSOS = async (req, res) => {
         console.error('Failed to notify volunteers:', err.message);
       }
 
-      // 5b. Alert Admins
       try {
         await sendNotification({
           io,
@@ -226,7 +192,6 @@ const createSOS = async (req, res) => {
         console.error('Failed to notify admins:', err.message);
       }
 
-      // 5c. Alert NGOs
       try {
         await sendNotification({
           io,
@@ -241,7 +206,6 @@ const createSOS = async (req, res) => {
         console.error('Failed to notify NGOs:', err.message);
       }
 
-      // 5d. Confirm to Victim
       try {
         await sendNotification({
           io,
@@ -256,7 +220,6 @@ const createSOS = async (req, res) => {
         console.error('Failed to notify victim:', err.message);
       }
 
-      // 5e. Real-time broadcast for live dispatch maps and task feeds
       io.emit('sos:created', newSOS);
     }
 
@@ -274,10 +237,6 @@ const createSOS = async (req, res) => {
   }
 };
 
-/**
- * GET /api/sos/my
- * Fetch all SOS requests submitted by the logged-in user
- */
 const getMySOS = async (req, res) => {
   try {
     const requests = await SOSRequest.find({ victim: req.user._id })
@@ -298,10 +257,6 @@ const getMySOS = async (req, res) => {
   }
 };
 
-/**
- * GET /api/sos/:id
- * Fetch single SOS request by ID
- */
 const getSOSById = async (req, res) => {
   try {
     const sos = await SOSRequest.findById(req.params.id)
@@ -338,11 +293,6 @@ const getSOSById = async (req, res) => {
   }
 };
 
-/**
- * GET /api/sos
- * Fetch all SOS requests with optional filtering and priority-based sorting.
- * Defaults to priorityScore DESC so the most urgent appear at top of admin list.
- */
 const getAllSOS = async (req, res) => {
   try {
     const { status, need, priority, sortBy, order } = req.query;
@@ -358,9 +308,6 @@ const getAllSOS = async (req, res) => {
       filter.priority = priority;
     }
 
-    // Module 2 Requirement 1:
-    // "so the most urgent requests appear at the top of the admin's list."
-    // Default sorting is by priorityScore DESC, then createdAt DESC.
     let sortOptions = { priorityScore: -1, createdAt: -1 };
 
     if (sortBy === 'createdAt') {
@@ -388,11 +335,6 @@ const getAllSOS = async (req, res) => {
   }
 };
 
-/**
- * GET /api/sos/prioritized
- * Dedicated triage endpoint returning active requests sorted by priorityScore
- * along with detailed vulnerability and priority breakdown analytics.
- */
 const getPrioritizedSOS = async (req, res) => {
   try {
     const { status, limit = 100 } = req.query;
@@ -410,7 +352,6 @@ const getPrioritizedSOS = async (req, res) => {
       .sort({ priorityScore: -1, createdAt: -1 })
       .limit(parseInt(limit, 10) || 100);
 
-    // Compute vulnerability metrics
     const stats = {
       totalActive: requests.length,
       criticalCount: requests.filter((r) => r.priorityScore >= 70).length,
@@ -440,10 +381,6 @@ const getPrioritizedSOS = async (req, res) => {
   }
 };
 
-/**
- * PATCH /api/sos/:id/cancel
- * Cancel an SOS request by the victim (if safe or submitted in error)
- */
 const cancelSOS = async (req, res) => {
   try {
     const sos = await SOSRequest.findById(req.params.id);
@@ -501,10 +438,6 @@ const cancelSOS = async (req, res) => {
   }
 };
 
-/**
- * PATCH /api/sos/:id/status
- * Update the status of an SOS request (Admin / Volunteer / NGO)
- */
 const updateSOSStatus = async (req, res) => {
   try {
     const { status, note, assignedVolunteer } = req.body;

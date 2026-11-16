@@ -1,37 +1,3 @@
-// utils/priorityCalculator.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Automated Priority Scoring Engine for Emergency SOS Requests (Member-2)
-//
-// Calculates an objective urgency score (0 - 100) based on vulnerability factors:
-//   - Pregnant women (+25 pts each)
-//   - Injured / Critical medical cases (+25 pts each)
-//   - Children <= 12 yrs (+12 pts each)
-//   - Elderly >= 60 yrs (+10 pts each)
-//   - Need category weights (rescue: +25, medicine: +15, water: +10, food: +5)
-//   - Group size scaling (marginal increase per person)
-//   - Emergency situational keywords detected in description
-//
-// Priority Tiers:
-//   - Critical: Score >= 70 (or direct life-threat rescue + injuries/pregnancy)
-//   - High:     Score 45 - 69
-//   - Medium:   Score 25 - 44
-//   - Low:      Score < 25
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Calculates priority score and detailed factor breakdown for an SOS request.
- *
- * @param {Object} params
- * @param {Object} [params.vulnerabilities] - Breakdown of vulnerable people
- * @param {number} [params.vulnerabilities.children] - Children count (<= 12 yrs)
- * @param {number} [params.vulnerabilities.elderly] - Elderly count (>= 60 yrs)
- * @param {number} [params.vulnerabilities.pregnantWomen] - Pregnant women count
- * @param {number} [params.vulnerabilities.injured] - Injured or critically ill count
- * @param {string[]} [params.needs] - Array of need types ('food', 'water', 'medicine', 'rescue')
- * @param {number} [params.numberOfPeople] - Total number of people in the group
- * @param {string} [params.description] - Additional emergency description notes
- * @returns {Object} { score, priority, factors, vulnerabilities }
- */
 function calculatePriorityScore({
   vulnerabilities = {},
   needs = [],
@@ -47,7 +13,6 @@ function calculatePriorityScore({
   const factors = [];
   let score = 0;
 
-  // ── 1. Pregnant Women (Extremely high vulnerability in disaster) ─────────────
   if (pregnantWomen > 0) {
     const pts = Math.min(30, pregnantWomen * 25);
     score += pts;
@@ -59,7 +24,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 2. Injured / Serious Medical Condition ─────────────────────────────────
   if (injured > 0) {
     const pts = Math.min(35, injured * 25);
     score += pts;
@@ -71,7 +35,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 3. Children (<= 12 years) ──────────────────────────────────────────────
   if (children > 0) {
     const pts = Math.min(25, children * 12);
     score += pts;
@@ -83,7 +46,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 4. Elderly (>= 60 years) ───────────────────────────────────────────────
   if (elderly > 0) {
     const pts = Math.min(20, elderly * 10);
     score += pts;
@@ -95,7 +57,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 5. Needs Categorization ────────────────────────────────────────────────
   const normalizedNeeds = Array.isArray(needs)
     ? needs.map((n) => String(n).trim().toLowerCase())
     : [];
@@ -136,7 +97,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 6. Group Size Scaling ──────────────────────────────────────────────────
   if (totalPeople > 1) {
     const pts = Math.min(15, Math.floor((totalPeople - 1) * 2));
     score += pts;
@@ -148,7 +108,6 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 7. Disaster Keyword Heuristics ─────────────────────────────────────────
   const descLower = (description || '').toLowerCase();
   const criticalKeywords = [
     'trapped',
@@ -174,10 +133,8 @@ function calculatePriorityScore({
     });
   }
 
-  // ── 8. Normalize Score (5 to 100) ──────────────────────────────────────────
   const finalScore = Math.min(100, Math.max(5, Math.round(score)));
 
-  // ── 9. Map to Standard Priority Tier ──────────────────────────────────────
   let priorityTier = 'Low';
   if (finalScore >= 70 || (normalizedNeeds.includes('rescue') && (injured > 0 || pregnantWomen > 0))) {
     priorityTier = 'Critical';

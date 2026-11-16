@@ -1,9 +1,3 @@
-// models/HazardZone.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema and model for Hazard Zones & Disaster Danger Areas.
-// Module 2 (Member-2): Live Disaster Map with 2dsphere Geospatial Indexing
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const VALID_HAZARDS = [
@@ -46,7 +40,7 @@ const hazardZoneSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number],
         default: [0, 0],
       },
       latitude: {
@@ -72,7 +66,6 @@ const hazardZoneSchema = new mongoose.Schema(
         default: '',
       },
     },
-    // Approximate danger/evacuation radius around the epicenter in meters
     radiusMeters: {
       type: Number,
       default: 1500,
@@ -106,11 +99,9 @@ const hazardZoneSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes for geospatial proximity queries and status filtering ───────────
 hazardZoneSchema.index({ 'location.coordinates': '2dsphere' });
 hazardZoneSchema.index({ status: 1, severity: 1 });
 
-// ── Synchronize GeoJSON coordinates before saving ────────────────────────────
 hazardZoneSchema.pre('save', function (next) {
   if (
     this.location &&

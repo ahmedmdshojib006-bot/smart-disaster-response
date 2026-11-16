@@ -1,10 +1,3 @@
-// scripts/seedMapData.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Seeder script for Live Disaster Map data (Member-2):
-// Seeds sample Hazard Zones, Relief Camps, and Priority-Scored SOS requests
-// with accurate Bangladesh GPS coordinates (Feni, Sylhet, Noakhali, Dhaka).
-// ─────────────────────────────────────────────────────────────────────────────
-
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
@@ -310,7 +303,6 @@ const seedMapData = async () => {
         description: spec.description,
       });
 
-      // Check if already exists nearby
       const existing = await SOSRequest.findOne({
         'location.address': spec.location.address,
       });
