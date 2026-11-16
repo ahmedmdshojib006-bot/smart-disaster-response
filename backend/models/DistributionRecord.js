@@ -1,10 +1,3 @@
-// backend/models/DistributionRecord.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema for Relief Resource Distribution Tracking (Member-3: Module 2).
-// Tracks where, when, to whom, and how much relief resources (food, water, medicine,
-// blankets) have been distributed across affected districts and shelters.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const distributionRecordSchema = new mongoose.Schema(
