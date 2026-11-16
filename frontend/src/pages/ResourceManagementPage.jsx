@@ -1,11 +1,3 @@
-// frontend/src/pages/ResourceManagementPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Member-3: Module 2 — Relief Operations & Resource Monitoring
-// Admins and NGOs can track resource inventory and distribution, including
-// stock levels of food, water, medicine, and blankets, and where and how much
-// has been distributed.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -24,7 +16,6 @@ export default function ResourceManagementPage() {
   const isAuthorized = user?.role === 'Admin' || user?.role === 'NGO';
   const isAdmin = user?.role === 'Admin';
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [resources, setResources] = useState([]);
   const [distributions, setDistributions] = useState([]);
   const [stats, setStats] = useState(null);
@@ -33,14 +24,14 @@ export default function ResourceManagementPage() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  // Filter States
-  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'distributions' | 'analytics'
+ 
+  const [activeTab, setActiveTab] = useState('inventory');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedDistrict, setSelectedDistrict] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Modals
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [showRestockModal, setShowRestockModal] = useState(false);
@@ -48,7 +39,7 @@ export default function ResourceManagementPage() {
   const [selectedResource, setSelectedResource] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form States
+
   const [createForm, setCreateForm] = useState({
     name: '',
     category: 'Food',
@@ -94,7 +85,7 @@ export default function ResourceManagementPage() {
     notes: '',
   });
 
-  // ── Fetch Data ─────────────────────────────────────────────────────────────
+  
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -123,7 +114,7 @@ export default function ResourceManagementPage() {
     }
   }, []);
 
-  // Fetch shelters for distribution linking (Member-1 Shelter integration)
+
   const fetchShelters = useCallback(async () => {
     try {
       const res = await axiosInstance.get('/api/shelters');
@@ -131,7 +122,7 @@ export default function ResourceManagementPage() {
         setShelters(res.data.shelters);
       }
     } catch (e) {
-      // Non-critical if shelters cannot be loaded
+     
     }
   }, []);
 
@@ -140,7 +131,7 @@ export default function ResourceManagementPage() {
     fetchShelters();
   }, [fetchData, fetchShelters]);
 
-  // ── Socket.IO Live Updates ──────────────────────────────────────────────────
+
   useEffect(() => {
     if (!socket) return;
 
@@ -168,7 +159,7 @@ export default function ResourceManagementPage() {
     };
   }, [socket, fetchData]);
 
-  // ── Filtered Resources ─────────────────────────────────────────────────────
+
   const filteredResources = useMemo(() => {
     return resources.filter((item) => {
       if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
@@ -186,7 +177,6 @@ export default function ResourceManagementPage() {
     });
   }, [resources, selectedCategory, selectedStatus, selectedDistrict, searchQuery]);
 
-  // ── Create Resource ────────────────────────────────────────────────────────
   const handleCreateResource = async (e) => {
     e.preventDefault();
     try {
@@ -216,7 +206,7 @@ export default function ResourceManagementPage() {
     }
   };
 
-  // ── Record Distribution ────────────────────────────────────────────────────
+
   const handleRecordDistribution = async (e) => {
     e.preventDefault();
     try {
@@ -241,7 +231,6 @@ export default function ResourceManagementPage() {
     }
   };
 
-  // ── Restock Resource ───────────────────────────────────────────────────────
   const handleRestockResource = async (e) => {
     e.preventDefault();
     if (!selectedResource) return;
@@ -260,7 +249,6 @@ export default function ResourceManagementPage() {
     }
   };
 
-  // ── Edit Resource ──────────────────────────────────────────────────────────
   const handleEditResource = async (e) => {
     e.preventDefault();
     if (!selectedResource) return;
@@ -279,7 +267,6 @@ export default function ResourceManagementPage() {
     }
   };
 
-  // ── Delete Resource ────────────────────────────────────────────────────────
   const handleDeleteResource = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}" from inventory?`)) return;
     try {
@@ -292,7 +279,6 @@ export default function ResourceManagementPage() {
     }
   };
 
-  // Open Distribute modal pre-filled
   const openDistributeModal = (item) => {
     setSelectedResource(item);
     setDistributeForm({
@@ -310,7 +296,6 @@ export default function ResourceManagementPage() {
     setShowDistributeModal(true);
   };
 
-  // Open Restock modal
   const openRestockModal = (item) => {
     setSelectedResource(item);
     setRestockForm({
@@ -321,7 +306,7 @@ export default function ResourceManagementPage() {
     setShowRestockModal(true);
   };
 
-  // Open Edit modal
+
   const openEditModal = (item) => {
     setSelectedResource(item);
     setEditForm({
@@ -338,7 +323,7 @@ export default function ResourceManagementPage() {
     setShowEditModal(true);
   };
 
-  // When shelter changes in distribute form, auto-fill district and name
+
   const handleShelterChange = (e) => {
     const sId = e.target.value;
     const found = shelters.find((s) => s._id === sId);
@@ -1523,7 +1508,6 @@ function getStatusBadgeStyle(status) {
   }
 }
 
-// ── Styles Object ─────────────────────────────────────────────────────────────
 const styles = {
   page: {
     minHeight: '100vh',
