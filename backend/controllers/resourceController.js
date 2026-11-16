@@ -1,5 +1,3 @@
-
-
 const Resource = require('../models/Resource');
 const DistributionRecord = require('../models/DistributionRecord');
 let Shelter = null;
