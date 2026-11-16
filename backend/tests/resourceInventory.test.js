@@ -1,10 +1,3 @@
-// backend/tests/resourceInventory.test.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Automated Test Suite for Member-3 (Module 2): Resource Inventory & Distribution Tracking
-// Tests Mongoose schema validations, enum integrity, status pre-save hooks,
-// atomic stock deductions, restock calculations, and route/controller definitions.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 const Resource = require('../models/Resource');
 const DistributionRecord = require('../models/DistributionRecord');
