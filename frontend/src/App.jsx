@@ -178,23 +178,8 @@ function App() {
         }
       />
 
-      <Route
-        path="/map"
-        element={
-          <ProtectedRoute>
-            <DisasterMapPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/disaster-map"
-        element={
-          <ProtectedRoute>
-            <DisasterMapPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/map" element={<DisasterMapPage />} />
+      <Route path="/disaster-map" element={<DisasterMapPage />} />
 
       <Route
         path="/resources"

@@ -162,6 +162,35 @@ function Navbar() {
           </>
         ) : (
           <>
+            <Link
+              to="/map"
+              style={{
+                ...styles.authLink,
+                fontSize: '0.85rem',
+                padding: '0.35rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                background: 'rgba(255,255,255,0.18)',
+                fontWeight: 700,
+              }}
+            >
+              🗺️ Disaster Map
+            </Link>
+            <Link
+              to="/shelters"
+              style={{
+                ...styles.authLink,
+                fontSize: '0.85rem',
+                padding: '0.35rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                background: 'rgba(255,255,255,0.12)',
+              }}
+            >
+              🏠 Shelters
+            </Link>
             <Link to="/login" style={styles.authLink}>
               Login
             </Link>

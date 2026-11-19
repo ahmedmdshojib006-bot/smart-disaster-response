@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
@@ -430,6 +431,51 @@ function DashboardVolunteer() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#fff',
+            borderRadius: '12px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            border: '1px solid #334155',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <span style={{ backgroundColor: '#dc2626', color: '#fff', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
+                Live Disaster Map
+              </span>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0.4rem 0 0.2rem 0', color: '#ffffff' }}>
+                🗺️ Real-Time Disaster Map & Geospatial Operations
+              </h2>
+              <p style={{ opacity: 0.9, fontSize: '0.88rem', maxWidth: '650px', margin: 0, color: '#cbd5e1' }}>
+                Track live distress calls prioritized by urgency, inspect flood shelters, active hazard perimeters, and nearby relief camps in real time.
+              </p>
+            </div>
+
+            <Link
+              to="/map"
+              style={{
+                backgroundColor: '#dc2626',
+                color: '#ffffff',
+                padding: '0.65rem 1.3rem',
+                borderRadius: '8px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(220,38,38,0.4)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.92rem',
+              }}
+            >
+              🗺️ Open Live Map →
+            </Link>
           </div>
         </div>
 

@@ -38,6 +38,51 @@ function DashboardNGO() {
           </p>
         </div>
 
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#fff',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            border: '1px solid #334155',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <span style={{ backgroundColor: '#dc2626', color: '#fff', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
+                Live Disaster Map
+              </span>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0.5rem 0 0.3rem 0', color: '#ffffff' }}>
+                🗺️ Interactive Disaster Response Map & Relief Tracker
+              </h2>
+              <p style={{ opacity: 0.9, fontSize: '0.9rem', maxWidth: '650px', margin: 0, color: '#cbd5e1' }}>
+                Monitor high-priority distress signals, flood shelter capacities, active hazard zones, and distribution camps with real-time geospatial tracking.
+              </p>
+            </div>
+
+            <Link
+              to="/map"
+              style={{
+                backgroundColor: '#dc2626',
+                color: '#ffffff',
+                padding: '0.7rem 1.4rem',
+                borderRadius: '8px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(220,38,38,0.4)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.95rem',
+              }}
+            >
+              🗺️ Open Live Disaster Map →
+            </Link>
+          </div>
+        </div>
+
         {/* ── Module 2 Member-3 Resource Management Quick Action Card ── */}
         <div
           style={{
@@ -120,6 +165,10 @@ function DashboardNGO() {
             <li>
               <strong>Coordinate with shelters:</strong> View capacity and facilities on the{' '}
               <Link to="/shelters" style={{ color: '#2563eb', fontWeight: 600 }}>Shelters page</Link>.
+            </li>
+            <li>
+              <strong>Live GIS situational awareness:</strong> Monitor real-time distress clusters, hazard zones, and relief distribution points on the{' '}
+              <Link to="/map" style={{ color: '#2563eb', fontWeight: 600 }}>Live Disaster Map</Link>.
             </li>
             <li>Assign tasks to volunteers and track operational progress in real time.</li>
             <li>Avoid duplication of relief efforts through centralized inventory tracking.</li>

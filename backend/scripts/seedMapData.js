@@ -193,19 +193,16 @@ const seedMapData = async () => {
       await citizen.save();
     }
 
-    // 1. Seed Hazard Zones
     console.log('Clearing existing seed hazard zones...');
     await HazardZone.deleteMany({ name: { $in: sampleHazards.map((h) => h.name) } });
     const insertedHazards = await HazardZone.insertMany(sampleHazards);
     console.log(`✅ Seeded ${insertedHazards.length} Hazard Zones.`);
 
-    // 2. Seed Relief Camps
     console.log('Clearing existing seed relief camps...');
     await ReliefCamp.deleteMany({ name: { $in: sampleReliefCamps.map((rc) => rc.name) } });
     const insertedRelief = await ReliefCamp.insertMany(sampleReliefCamps);
     console.log(`✅ Seeded ${insertedRelief.length} Relief Camps.`);
 
-    // 3. Seed Realistic Priority-Scored SOS Requests
     console.log('Seeding sample priority-calculated SOS requests...');
     const sampleSOSSpecs = [
       {

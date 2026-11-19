@@ -91,7 +91,17 @@ function DisasterMapPage() {
     userLocationLayerRef.current = userLocationLayer;
     mapInstanceRef.current = map;
 
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
+      window.removeEventListener('resize', handleResize);
       map.remove();
       mapInstanceRef.current = null;
     };

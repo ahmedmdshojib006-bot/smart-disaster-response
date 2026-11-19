@@ -1,6 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import axiosInstance from '../api/axiosInstance.js';
 import { calculatePriorityScoreClient } from '../utils/priorityCalculatorClient.js';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const AVAILABLE_NEEDS = [
   { id: 'rescue', label: 'Emergency Rescue', icon: '🛟', desc: 'Trapped / Water rising' },
@@ -10,6 +19,10 @@ const AVAILABLE_NEEDS = [
 ];
 
 function SOSRequestForm({ onSOSSubmitted }) {
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
@@ -47,6 +60,99 @@ function SOSRequestForm({ onSOSSubmitted }) {
     });
   }, [childrenCount, elderlyCount, pregnantCount, injuredCount, selectedNeeds, numberOfPeople, description]);
 
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    const initialLat = parseFloat(latitude) || 23.685;
+    const initialLng = parseFloat(longitude) || 90.3563;
+    const initialZoom = latitude && longitude ? 13 : 7;
+
+    const map = L.map(mapContainerRef.current, {
+      center: [initialLat, initialLng],
+      zoom: initialZoom,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    if (latitude && longitude && !isNaN(initialLat) && !isNaN(initialLng)) {
+      const marker = L.marker([initialLat, initialLng]).addTo(map);
+      marker.bindPopup('Emergency Location').openPopup();
+      markerRef.current = marker;
+    }
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      const latStr = lat.toFixed(6);
+      const lngStr = lng.toFixed(6);
+      setLatitude(latStr);
+      setLongitude(lngStr);
+
+      if (markerRef.current) {
+        markerRef.current.setLatLng([lat, lng]);
+      } else {
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup('Distress Location Selected').openPopup();
+        markerRef.current = marker;
+      }
+      setGpsStatus({
+        text: `Map location selected: ${latStr}, ${lngStr}`,
+        type: 'success',
+      });
+    });
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener('resize', handleResize);
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      map.remove();
+      mapInstanceRef.current = null;
+      markerRef.current = null;
+    };
+  }, []);
+
+  const handleLatChange = (e) => {
+    const val = e.target.value;
+    setLatitude(val);
+    const latNum = parseFloat(val);
+    const lngNum = parseFloat(longitude);
+    if (!isNaN(latNum) && !isNaN(lngNum) && mapInstanceRef.current) {
+      if (markerRef.current) {
+        markerRef.current.setLatLng([latNum, lngNum]);
+      } else {
+        markerRef.current = L.marker([latNum, lngNum]).addTo(mapInstanceRef.current);
+      }
+      mapInstanceRef.current.panTo([latNum, lngNum]);
+    }
+  };
+
+  const handleLngChange = (e) => {
+    const val = e.target.value;
+    setLongitude(val);
+    const latNum = parseFloat(latitude);
+    const lngNum = parseFloat(val);
+    if (!isNaN(latNum) && !isNaN(lngNum) && mapInstanceRef.current) {
+      if (markerRef.current) {
+        markerRef.current.setLatLng([latNum, lngNum]);
+      } else {
+        markerRef.current = L.marker([latNum, lngNum]).addTo(mapInstanceRef.current);
+      }
+      mapInstanceRef.current.panTo([latNum, lngNum]);
+    }
+  };
+
   const handleDetectLocation = () => {
     setErrorMsg('');
     if (!navigator.geolocation) {
@@ -73,6 +179,18 @@ function SOSRequestForm({ onSOSSubmitted }) {
           text: `GPS acquired (accuracy: ±${accuracy}m).`,
           type: 'success',
         });
+
+        if (mapInstanceRef.current) {
+          const latNum = parseFloat(lat);
+          const lngNum = parseFloat(lng);
+          if (markerRef.current) {
+            markerRef.current.setLatLng([latNum, lngNum]);
+          } else {
+            markerRef.current = L.marker([latNum, lngNum]).addTo(mapInstanceRef.current);
+          }
+          markerRef.current.bindPopup('Your Current GPS Location').openPopup();
+          mapInstanceRef.current.flyTo([latNum, lngNum], 14, { duration: 1.2 });
+        }
       },
       (error) => {
         setGpsLoading(false);
@@ -322,7 +440,7 @@ function SOSRequestForm({ onSOSSubmitted }) {
                   placeholder="e.g. 23.810331"
                   className="gps-input"
                   value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
+                  onChange={handleLatChange}
                   required
                 />
               </div>
@@ -337,9 +455,36 @@ function SOSRequestForm({ onSOSSubmitted }) {
                   placeholder="e.g. 90.412521"
                   className="gps-input"
                   value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
+                  onChange={handleLngChange}
                   required
                 />
+              </div>
+            </div>
+
+            <div style={{ marginTop: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <span style={{ fontSize: '0.84rem', fontWeight: 600, color: '#334155' }}>
+                  🗺️ Interactive Distress Location Map (Click anywhere to drop pin)
+                </span>
+                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                  Bangladesh Live GIS
+                </span>
+              </div>
+              <div
+                ref={mapContainerRef}
+                className="mini-map-container"
+                style={{
+                  height: '240px',
+                  width: '100%',
+                  borderRadius: '8px',
+                  border: '1.5px solid #cbd5e1',
+                  overflow: 'hidden',
+                  background: '#e2e8f0',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              />
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.35rem' }}>
+                💡 Click or tap anywhere on the map above to accurately place your emergency location pin, or click "Auto-Detect My GPS Location".
               </div>
             </div>
 
