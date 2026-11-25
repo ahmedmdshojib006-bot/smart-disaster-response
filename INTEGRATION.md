@@ -1,4 +1,4 @@
-# Smart Disaster Response Platform — Team Integration Guide
+# ReliefSync — Team Integration Guide
 
 > **Branch**: `feature/auth-notifications`
 > **Last Updated**: 2026-10-09

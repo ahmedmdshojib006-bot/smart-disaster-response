@@ -75,7 +75,7 @@ function Navbar() {
   return (
     <nav style={styles.nav}>
       <Link to="/" style={styles.brand}>
-        🚨 DisasterResponse
+        🚨 ReliefSync
       </Link>
 
       <div style={styles.rightSection}>

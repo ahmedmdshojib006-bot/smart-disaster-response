@@ -1,4 +1,4 @@
-# Smart Disaster Response & Relief Coordination Platform
+# ReliefSync — Smart Disaster Response & Relief Coordination Platform
 
 A university capstone project for real-time disaster response coordination.
 

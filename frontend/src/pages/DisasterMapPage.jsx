@@ -97,7 +97,7 @@ function DisasterMapPage() {
     // OpenStreetMap standard tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Bangladesh Disaster Response',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | ReliefSync Bangladesh',
       maxZoom: 19,
     }).addTo(map);
 

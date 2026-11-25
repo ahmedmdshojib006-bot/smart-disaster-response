@@ -152,8 +152,8 @@ function RegisterPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>🚨 Join the Platform</h1>
-          <p>Create your Disaster Response account</p>
+          <h1>🚨 Join ReliefSync</h1>
+          <p>Create your ReliefSync account</p>
         </div>
 
         {serverError && (

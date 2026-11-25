@@ -1,7 +1,7 @@
 {
   "name": "disaster-response-frontend",
   "version": "1.0.0",
-  "description": "Smart Disaster Response & Relief Coordination Platform — Frontend",
+  "description": "ReliefSync — Smart Disaster Response & Relief Coordination Platform (Frontend)",
   "type": "module",
   "scripts": {
     "dev": "vite",
