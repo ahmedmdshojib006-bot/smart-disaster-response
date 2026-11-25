@@ -10,6 +10,7 @@
     "seed:shelters": "node scripts/seedShelters.js",
     "seed:map": "node scripts/seedMapData.js",
     "seed:resources": "node scripts/seedResources.js",
+    "seed:households": "node scripts/seedHouseholds.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "multer": "^2.4.0",
+    "qrcode": "^1.5.4",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
