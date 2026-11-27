@@ -1,8 +1,3 @@
-// frontend/src/utils/pwaRegistration.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Service Worker Registration for PWA support (Member-3: Module 3).
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'test') {
     window.addEventListener('load', () => {
