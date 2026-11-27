@@ -1,4 +1,3 @@
-// backend/scripts/seedMissingPersons.js
 require('dotenv').config();
 const mongoose = require('mongoose');
 const MissingPerson = require('../models/MissingPerson');
@@ -146,8 +145,6 @@ async function seedMissingPersons() {
   try {
     await mongoose.connect(mongoUri);
     console.log('MongoDB connected successfully.');
-
-    // Count existing
     const existingCount = await MissingPerson.countDocuments();
     if (existingCount > 0) {
       console.log(`MissingPerson collection already contains ${existingCount} documents.`);
