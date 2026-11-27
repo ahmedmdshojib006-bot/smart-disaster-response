@@ -1,17 +1,5 @@
-// frontend/src/utils/offlineSyncManager.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Offline Storage Queue & Background Sync Manager (Member-3: Module 3).
-// Allows disaster victims to submit SOS requests without active internet;
-// persists requests locally and automatically syncs when connectivity returns.
-// Also generates compact SMS Fallback payloads for 2G cellular dispatches.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const QUEUE_STORAGE_KEY = 'reliefsync_offline_sos_queue';
 const SMS_EMERGENCY_NUMBER = '999'; // Bangladesh National Emergency Services hotline
-
-/**
- * Retrieve all pending offline SOS requests from local storage.
- */
 export function getOfflineSOSQueue() {
   try {
     const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
@@ -21,10 +9,6 @@ export function getOfflineSOSQueue() {
     return [];
   }
 }
-
-/**
- * Enqueue a new SOS request created while offline.
- */
 export function saveOfflineSOS(sosPayload) {
   try {
     const queue = getOfflineSOSQueue();
@@ -45,10 +29,6 @@ export function saveOfflineSOS(sosPayload) {
     throw new Error('Could not persist offline SOS request to local storage.');
   }
 }
-
-/**
- * Remove a specific item from the offline queue after successful sync.
- */
 export function removeOfflineSOS(tempId) {
   try {
     const queue = getOfflineSOSQueue();
@@ -58,10 +38,6 @@ export function removeOfflineSOS(tempId) {
     console.error('Failed to remove synced item from queue:', err);
   }
 }
-
-/**
- * Clear the entire offline queue.
- */
 export function clearOfflineSOSQueue() {
   try {
     localStorage.removeItem(QUEUE_STORAGE_KEY);
@@ -69,11 +45,6 @@ export function clearOfflineSOSQueue() {
     console.error('Failed to clear offline SOS queue:', err);
   }
 }
-
-/**
- * Formats a compact, cellular-safe SMS message for emergency dispatch.
- * Example: "EMERGENCY SOS! Loc: 23.0159,91.3976 (Feni). Needs: Food,Water. Ppl: 4. Vulnerable: 2 kids. Phone: 01711223344"
- */
 export function formatSMSMessage(sosPayload) {
   const lat = parseFloat(sosPayload.latitude) || 0;
   const lng = parseFloat(sosPayload.longitude) || 0;
@@ -95,10 +66,6 @@ export function formatSMSMessage(sosPayload) {
 
   return `EMERGENCY SOS! GPS:${lat.toFixed(4)},${lng.toFixed(4)} (${dist}). Need:${needsStr}. Ppl:${ppl}.${vulnText} Tel:${phone}`;
 }
-
-/**
- * Generates an SMS clickable URI scheme (sms:999?body=...) for native mobile dispatch.
- */
 export function generateSMSFallbackURI(sosPayload, targetNumber = SMS_EMERGENCY_NUMBER) {
   const message = formatSMSMessage(sosPayload);
   const encodedBody = encodeURIComponent(message);
@@ -107,10 +74,6 @@ export function generateSMSFallbackURI(sosPayload, targetNumber = SMS_EMERGENCY_
   const separator = isIOS ? '&' : '?';
   return `sms:${targetNumber}${separator}body=${encodedBody}`;
 }
-
-/**
- * Synchronize all pending offline requests with the backend API.
- */
 export async function syncOfflineQueue(axiosInstance) {
   const queue = getOfflineSOSQueue();
   if (queue.length === 0) {
@@ -121,7 +84,6 @@ export async function syncOfflineQueue(axiosInstance) {
   let failedCount = 0;
 
   try {
-    // Attempt batch sync via dedicated /api/sos/sync-offline endpoint
     const response = await axiosInstance.post('/api/sos/sync-offline', { requests: queue });
     if (response.data && response.data.success) {
       syncedCount = response.data.count || queue.length;
@@ -131,9 +93,7 @@ export async function syncOfflineQueue(axiosInstance) {
   } catch (batchError) {
     console.warn('[OfflineSyncManager] Batch sync failed, falling back to individual request sync:', batchError.message);
   }
-
-  // Fallback: Sync items one by one
-  for (const item of queue) {
+ for (const item of queue) {
     try {
       const formData = new FormData();
       formData.append('latitude', item.latitude);
