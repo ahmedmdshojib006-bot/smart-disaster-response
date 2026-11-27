@@ -1,7 +1,7 @@
 {
   "name": "disaster-response-backend",
   "version": "1.0.0",
-  "description": "Smart Disaster Response & Relief Coordination Platform — Backend API",
+  "description": "ReliefSync — Smart Disaster Response & Relief Coordination Platform (Backend API)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

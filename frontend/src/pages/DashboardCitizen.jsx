@@ -55,7 +55,7 @@ function DashboardCitizen() {
             <span className="role-badge Citizen">{user?.role}</span>
           </h1>
           <p style={{ color: '#555' }}>
-            You are connected to the Smart Disaster Response Network. Use this dashboard to
+            You are connected to the ReliefSync Emergency Response Network. Use this dashboard to
             send instant distress signals with your real-time location and track ongoing relief operations.
           </p>
         </div>
