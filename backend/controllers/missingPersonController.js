@@ -1,19 +1,11 @@
-// backend/controllers/missingPersonController.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Controller for Missing Persons & Community Safety Network (Member-3: Module 3).
-// Handles crowdsourced missing person reports, search & filtering by district,
-// and safe reunification tracking with shelter linkage.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const MissingPerson = require('../models/MissingPerson');
 let Shelter = null;
 try {
   Shelter = require('../models/Shelter');
 } catch (e) {
-  // Graceful fallback if Shelter is not loaded
+  
 }
 
-// Helper to broadcast socket events safely
 const broadcastSocket = (req, event, data) => {
   try {
     const io = req.app ? req.app.get('io') : null;
@@ -24,9 +16,6 @@ const broadcastSocket = (req, event, data) => {
     console.error(`Socket broadcast error for ${event}:`, err.message);
   }
 };
-
-// ── 1. GET /api/missing-persons ───────────────────────────────────────────────
-// List all missing person reports with multi-field search and filters
 const getAllMissingPersons = async (req, res) => {
   try {
     const { search, status, district, gender, limit } = req.query;
@@ -78,9 +67,6 @@ const getAllMissingPersons = async (req, res) => {
     });
   }
 };
-
-// ── 2. GET /api/missing-persons/stats ─────────────────────────────────────────
-// Aggregate statistics on missing vs safely reunited persons
 const getMissingPersonStats = async (req, res) => {
   try {
     const allReports = await MissingPerson.find().lean();
@@ -127,9 +113,6 @@ const getMissingPersonStats = async (req, res) => {
     });
   }
 };
-
-// ── 3. GET /api/missing-persons/:id ───────────────────────────────────────────
-// Get single missing person record
 const getMissingPersonById = async (req, res) => {
   try {
     const person = await MissingPerson.findById(req.params.id)
@@ -157,9 +140,6 @@ const getMissingPersonById = async (req, res) => {
     });
   }
 };
-
-// ── 4. POST /api/missing-persons ──────────────────────────────────────────────
-// Create new missing person report
 const reportMissingPerson = async (req, res) => {
   try {
     const {
@@ -199,8 +179,6 @@ const reportMissingPerson = async (req, res) => {
     if (!contactName || !contactName.trim() || !contactPhone || !contactPhone.trim()) {
       return res.status(400).json({ success: false, message: 'Contact person name and telephone number are required' });
     }
-
-    // Determine photo path: either from multer file upload or direct URL
     let finalPhotoUrl = photoUrl && photoUrl.trim() ? photoUrl.trim() : null;
     if (req.file) {
       finalPhotoUrl = `/uploads/${req.file.filename}`;
@@ -257,9 +235,6 @@ const reportMissingPerson = async (req, res) => {
     });
   }
 };
-
-// ── 5. PATCH /api/missing-persons/:id/safe ────────────────────────────────────
-// Mark a missing person as "Found / Safe"
 const markPersonSafe = async (req, res) => {
   try {
     const { foundLocation, rescueShelterId, notes } = req.body;
@@ -281,7 +256,7 @@ const markPersonSafe = async (req, res) => {
           shelterName = shelterDoc.name;
         }
       } catch (e) {
-        // Continue if shelter lookup is optional
+    
       }
     }
 
@@ -321,17 +296,12 @@ const markPersonSafe = async (req, res) => {
     });
   }
 };
-
-// ── 6. PUT /api/missing-persons/:id ───────────────────────────────────────────
-// Update missing person details (Reporter or Admin)
 const updateMissingPerson = async (req, res) => {
   try {
     const person = await MissingPerson.findById(req.params.id);
     if (!person) {
       return res.status(404).json({ success: false, message: 'Missing person report not found' });
     }
-
-    // Enforce authorization: only reporter or admin
     if (
       req.user &&
       req.user.role !== 'Admin' &&
@@ -393,9 +363,6 @@ const updateMissingPerson = async (req, res) => {
     });
   }
 };
-
-// ── 7. DELETE /api/missing-persons/:id ────────────────────────────────────────
-// Delete a missing person report (Reporter or Admin)
 const deleteMissingPerson = async (req, res) => {
   try {
     const person = await MissingPerson.findById(req.params.id);
