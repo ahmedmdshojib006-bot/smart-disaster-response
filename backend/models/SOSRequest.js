@@ -9,7 +9,9 @@ const sosRequestSchema = new mongoose.Schema(
     victim: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Victim ID is required'],
+      required: function () {
+        return this.submissionSource !== 'SMS_FALLBACK';
+      },
     },
     location: {
       type: {
@@ -135,6 +137,20 @@ const sosRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
+    },
+    isOfflineSync: {
+      type: Boolean,
+      default: false,
+    },
+    offlineLoggedAt: {
+      type: Date,
+      default: null,
+    },
+    submissionSource: {
+      type: String,
+      enum: ['WEB', 'PWA_OFFLINE', 'SMS_FALLBACK'],
+      default: 'WEB',
+      index: true,
     },
     statusHistory: [
       {

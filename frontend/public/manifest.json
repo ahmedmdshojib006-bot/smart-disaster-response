@@ -1,0 +1,17 @@
+{
+  "short_name": "ReliefSync",
+  "name": "ReliefSync - Smart Disaster Response Platform",
+  "description": "Offline-ready PWA for emergency disaster response, offline SOS requests, and missing persons reunification in Bangladesh.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#1d4ed8",
+  "display": "standalone",
+  "orientation": "portrait"
+}

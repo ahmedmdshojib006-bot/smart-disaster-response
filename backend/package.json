@@ -10,6 +10,7 @@
     "seed:shelters": "node scripts/seedShelters.js",
     "seed:map": "node scripts/seedMapData.js",
     "seed:resources": "node scripts/seedResources.js",
+    "seed:missing": "node scripts/seedMissingPersons.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {

@@ -19,6 +19,8 @@ import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
 import DisasterMapPage from './pages/DisasterMapPage.jsx';
 import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
+import MissingPersonsPage from './pages/MissingPersonsPage.jsx';
+import OfflineSyncIndicator from './components/OfflineSyncIndicator.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -61,7 +63,8 @@ function NotFoundPage() {
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route
         path="/"
         element={
@@ -199,10 +202,21 @@ function App() {
         }
       />
 
+      <Route
+        path="/missing-persons"
+        element={
+          <ProtectedRoute>
+            <MissingPersonsPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    <OfflineSyncIndicator />
+    </>
   );
 }
 

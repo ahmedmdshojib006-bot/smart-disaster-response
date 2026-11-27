@@ -7,6 +7,9 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 
 import './styles/app.css';
+import { registerServiceWorker } from './utils/pwaRegistration.js';
+
+registerServiceWorker();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
