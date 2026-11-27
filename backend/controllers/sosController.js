@@ -506,9 +506,6 @@ const updateSOSStatus = async (req, res) => {
     });
   }
 };
-
-// ── Member-3: Module 3 — Offline PWA Background Synchronization ──────────────
-// Accepts an array of SOS requests stored locally while offline and persists them in batch
 const syncOfflineSOS = async (req, res) => {
   try {
     const { requests } = req.body;
@@ -600,9 +597,6 @@ const syncOfflineSOS = async (req, res) => {
     });
   }
 };
-
-// ── Member-3: Module 3 — SMS Fallback Emergency Gateway ───────────────────────
-// Ingests SMS emergency alerts when cellular data/internet is unavailable
 const handleSMSFallback = async (req, res) => {
   try {
     const { senderPhone, messageText, latitude, longitude, needs, numberOfPeople } = req.body;
@@ -618,8 +612,6 @@ const handleSMSFallback = async (req, res) => {
     let lng = parseFloat(longitude);
     let detectedNeeds = parseNeeds(needs);
     let peopleCount = parseInt(numberOfPeople, 10) || 1;
-
-    // Parse SMS text if sent in compact disaster format: "SOS <lat>,<lng> <needs> <count>"
     if (messageText && (isNaN(lat) || isNaN(lng))) {
       const coordMatch = messageText.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
       if (coordMatch) {
@@ -633,8 +625,6 @@ const handleSMSFallback = async (req, res) => {
         if (/rescue|save/i.test(messageText)) detectedNeeds.push('rescue');
       }
     }
-
-    // Default coordinates to central Bangladesh if coordinates are approximate
     if (isNaN(lat) || isNaN(lng)) {
       lat = 23.8103;
       lng = 90.4125;
@@ -653,7 +643,7 @@ const handleSMSFallback = async (req, res) => {
 
     const io = req.app.get('io');
     const sosDoc = new SOSRequest({
-      victim: req.user ? req.user._id : '000000000000000000000000', // System / unauthenticated fallback
+      victim: req.user ? req.user._id : '000000000000000000000000', 
       location: {
         latitude: lat,
         longitude: lng,
@@ -663,7 +653,7 @@ const handleSMSFallback = async (req, res) => {
       needs: detectedNeeds,
       numberOfPeople: peopleCount,
       vulnerabilities,
-      priorityScore: Math.max(80, priorityScore), // High emergency score for SMS alerts
+      priorityScore: Math.max(80, priorityScore), 
       priorityFactors,
       priority: 'Critical',
       description: `[SMS FALLBACK DISPATCH] From: ${senderPhone}. Text: "${messageText || 'Emergency rescue requested via SMS'}".`,
@@ -677,8 +667,6 @@ const handleSMSFallback = async (req, res) => {
         },
       ],
     });
-
-    // Save with bypass of strict victim validation if anonymous SMS
     await sosDoc.save({ validateBeforeSave: false });
 
     if (io) {
