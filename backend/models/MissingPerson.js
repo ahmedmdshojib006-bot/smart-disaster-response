@@ -1,11 +1,3 @@
-// backend/models/MissingPerson.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Mongoose schema for Missing Persons & Community Reunification Board
-// (Member-3: Module 3 — Community Engagement & Safety Network).
-// Allows citizens, volunteers, and rescue workers to post missing person reports
-// with photos and physical features, and mark individuals as "Safe" once found.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const mongoose = require('mongoose');
 
 const missingPersonSchema = new mongoose.Schema(
@@ -160,8 +152,6 @@ const missingPersonSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-// ── Compound Indexes for Fast Searching & Filtering ──────────────────────────
 missingPersonSchema.index({ status: 1, 'lastSeenLocation.district': 1 });
 missingPersonSchema.index({ fullName: 'text', physicalDescription: 'text', 'lastSeenLocation.landmark': 'text' });
 
