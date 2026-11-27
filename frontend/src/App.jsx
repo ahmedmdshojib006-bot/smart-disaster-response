@@ -19,6 +19,7 @@ import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
 import DisasterMapPage from './pages/DisasterMapPage.jsx';
 import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
+import HouseholdQRPage from './pages/HouseholdQRPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -195,6 +196,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ResourceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/households"
+        element={
+          <ProtectedRoute allowedRoles={['Admin', 'NGO', 'Volunteer', 'Citizen']}>
+            <HouseholdQRPage />
           </ProtectedRoute>
         }
       />
