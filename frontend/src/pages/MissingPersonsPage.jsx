@@ -1,11 +1,3 @@
-// frontend/src/pages/MissingPersonsPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Member-3: Module 3 — Community Engagement & Safety Network
-// Missing Persons & Family Reunification Board.
-// Allows users, volunteers, and rescue workers to post missing person reports
-// with photos and details, and mark individuals as "Safe" once found.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -19,28 +11,20 @@ const STATUSES = ['All', 'Missing', 'Found / Safe'];
 export default function MissingPersonsPage() {
   const { user } = useAuth();
   const { socket } = useSocket();
-
-  // ── State ──────────────────────────────────────────────────────────────────
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState(null);
   const [shelters, setShelters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-
-  // Filters
   const [statusFilter, setStatusFilter] = useState('All');
   const [districtFilter, setDistrictFilter] = useState('All');
   const [genderFilter, setGenderFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Modals
   const [showReportModal, setShowReportModal] = useState(false);
   const [showMarkSafeModal, setShowMarkSafeModal] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  // Form: Report Missing Person
   const [reportForm, setReportForm] = useState({
     fullName: '',
     age: '',
@@ -57,15 +41,11 @@ export default function MissingPersonsPage() {
     contactAltPhone: '',
     photoUrl: '',
   });
-
-  // Form: Mark Safe
   const [safeForm, setSafeForm] = useState({
     foundLocation: '',
     rescueShelterId: '',
     notes: '',
   });
-
-  // ── Fetch Data ─────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -97,7 +77,6 @@ export default function MissingPersonsPage() {
         setShelters(res.data.shelters);
       }
     } catch (e) {
-      // Non-critical fallback
     }
   }, []);
 
@@ -105,8 +84,6 @@ export default function MissingPersonsPage() {
     fetchData();
     fetchShelters();
   }, [fetchData, fetchShelters]);
-
-  // ── Real-Time WebSockets ───────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
@@ -128,8 +105,6 @@ export default function MissingPersonsPage() {
       socket.off('missing-person:marked-safe', handleMarkedSafe);
     };
   }, [socket, fetchData]);
-
-  // ── Filtered Reports ───────────────────────────────────────────────────────
   const filteredReports = useMemo(() => {
     return reports.filter((item) => {
       if (statusFilter !== 'All' && item.status !== statusFilter) return false;
@@ -146,8 +121,6 @@ export default function MissingPersonsPage() {
       return true;
     });
   }, [reports, statusFilter, districtFilter, genderFilter, searchQuery]);
-
-  // ── Submit Report ──────────────────────────────────────────────────────────
   const handleReportSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -180,8 +153,6 @@ export default function MissingPersonsPage() {
       setSubmitting(false);
     }
   };
-
-  // ── Mark Person Safe ───────────────────────────────────────────────────────
   const handleMarkSafeSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPerson) return;
