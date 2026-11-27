@@ -1,11 +1,3 @@
-// frontend/src/components/OfflineSyncIndicator.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Interactive Offline PWA Status & SMS Emergency Fallback Indicator
-// (Member-3: Module 3 — Community Engagement & Safety Network).
-// Listens to network connectivity, automatically syncs queued SOS requests
-// upon internet recovery, and provides one-click SMS fallback dispatch.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import React, { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../api/axiosInstance.js';
 import {
@@ -73,8 +65,6 @@ export default function OfflineSyncIndicator() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('storage', handleStorageChange);
-
-    // Poll storage briefly every 5 seconds for new offline submissions
     const interval = setInterval(updateQueueStatus, 5000);
 
     return () => {
@@ -84,8 +74,6 @@ export default function OfflineSyncIndicator() {
       clearInterval(interval);
     };
   }, [handleTriggerSync, updateQueueStatus]);
-
-  // If online and nothing is queued, render minimal discreet status pill
   if (isOnline && queuedCount === 0 && !syncMessage) {
     return null;
   }
