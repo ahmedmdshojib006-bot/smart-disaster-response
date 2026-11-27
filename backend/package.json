@@ -11,6 +11,7 @@
     "seed:map": "node scripts/seedMapData.js",
     "seed:resources": "node scripts/seedResources.js",
     "seed:households": "node scripts/seedHouseholds.js",
+    "seed:hazards": "node scripts/seedHazardReports.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {

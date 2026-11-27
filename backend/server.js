@@ -18,6 +18,7 @@ const shelterRoutes = require('./routes/shelterRoutes');
 const mapRoutes = require('./routes/mapRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const householdRoutes = require('./routes/householdRoutes');
+const hazardRoutes = require('./routes/hazardRoutes');
 const { initSocket } = require('./socket/socketHandler');
 
 const app = express();
@@ -72,6 +73,7 @@ app.use('/api/shelters', shelterRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/households', householdRoutes);
+app.use('/api/hazards', hazardRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({

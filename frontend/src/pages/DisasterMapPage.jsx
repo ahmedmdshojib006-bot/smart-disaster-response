@@ -36,6 +36,7 @@ function DisasterMapPage() {
     sosRequests: [],
     shelters: [],
     hazardZones: [],
+    hazardReports: [],
     reliefCamps: [],
   });
   const [stats, setStats] = useState({
@@ -134,17 +135,24 @@ function DisasterMapPage() {
     const handleSOSCreated = () => fetchMapData();
     const handleSOSUpdated = () => fetchMapData();
     const handleHazardCreated = () => fetchMapData();
+    const handleHazardReportChanged = () => fetchMapData();
     const handleReliefCreated = () => fetchMapData();
 
     socket.on('sos:created', handleSOSCreated);
     socket.on('sos:updated', handleSOSUpdated);
     socket.on('hazard:created', handleHazardCreated);
+    socket.on('hazardReport:created', handleHazardReportChanged);
+    socket.on('hazardReport:updated', handleHazardReportChanged);
+    socket.on('hazardReport:deleted', handleHazardReportChanged);
     socket.on('reliefCamp:created', handleReliefCreated);
 
     return () => {
       socket.off('sos:created', handleSOSCreated);
       socket.off('sos:updated', handleSOSUpdated);
       socket.off('hazard:created', handleHazardCreated);
+      socket.off('hazardReport:created', handleHazardReportChanged);
+      socket.off('hazardReport:updated', handleHazardReportChanged);
+      socket.off('hazardReport:deleted', handleHazardReportChanged);
       socket.off('reliefCamp:created', handleReliefCreated);
     };
   }, [socket, fetchMapData]);
@@ -250,6 +258,41 @@ function DisasterMapPage() {
               <a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank" rel="noopener noreferrer" class="map-popup-btn secondary">
                 🗺️ Google Maps
               </a>
+            </div>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+        markersLayer.addLayer(marker);
+      });
+
+      (mapData.hazardReports || []).forEach((hr) => {
+        if (!hr.lat || !hr.lng) return;
+        const apiBase = axiosInstance.defaults.baseURL || '';
+        const imgSrc = hr.photoUrl
+          ? hr.photoUrl.startsWith('http')
+            ? hr.photoUrl
+            : `${apiBase}${hr.photoUrl}`
+          : null;
+        const marker = L.marker([hr.lat, hr.lng], { icon: createHazardIcon() });
+        const popupContent = `
+          <div class="map-popup-card">
+            <div class="map-popup-header">
+              <h4 class="map-popup-title">🚧 ${hr.title}</h4>
+              <span class="map-popup-badge" style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">
+                ${hr.status}
+              </span>
+            </div>
+            <div class="map-popup-body">
+              <p style="margin:0 0 0.35rem 0;"><strong>Type:</strong> ${hr.hazardType} (${hr.severity})</p>
+              <p style="margin:0 0 0.35rem 0;"><strong>Reporter Trust:</strong> ${hr.reporterTrustScore}/100 | <strong>Credibility:</strong> ${hr.credibilityScore}%</p>
+              <p style="margin:0 0 0.35rem 0;"><strong>Upvotes:</strong> ${hr.upvoteCount || 0} | <strong>Verifications:</strong> ${hr.verificationCount || 0}</p>
+              ${hr.waterDepthFeet ? `<p style="margin:0 0 0.35rem 0; color:#dc2626;"><strong>Water Depth:</strong> ~${hr.waterDepthFeet} ft</p>` : ''}
+              <p style="margin:0 0 0.35rem 0; font-size:0.8rem; color:#64748b;">${hr.address || hr.district || ''}</p>
+              ${imgSrc ? `<div style="margin-top:0.4rem;"><img src="${imgSrc}" alt="Hazard proof" style="width:100%; max-height:100px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;" /></div>` : ''}
+            </div>
+            <div class="map-popup-actions">
+              <a href="/hazards" class="map-popup-btn primary">Verify / Upvote</a>
+              <a href="https://www.google.com/maps?q=${hr.lat},${hr.lng}" target="_blank" rel="noopener noreferrer" class="map-popup-btn secondary">🗺️ Google Maps</a>
             </div>
           </div>
         `;
@@ -513,6 +556,25 @@ function DisasterMapPage() {
                 description: h.description,
                 distanceKm: h.distanceKm,
               })),
+              hazardReports: (nearbyRes.hazardReports || []).map((hr) => ({
+                id: hr._id,
+                type: 'hazardReport',
+                lat: hr.location.latitude,
+                lng: hr.location.longitude,
+                title: hr.title,
+                hazardType: hr.hazardType,
+                severity: hr.severity,
+                status: hr.status,
+                waterDepthFeet: hr.waterDepthFeet || 0,
+                address: hr.location.address || '',
+                district: hr.location.district || '',
+                photoUrl: hr.photoUrl || null,
+                credibilityScore: hr.credibilityScore ?? 50,
+                upvoteCount: (hr.upvotes || []).length,
+                verificationCount: (hr.verifications || []).length,
+                reporterTrustScore: hr.reporter?.trustScore ?? hr.reporterTrustSnapshot ?? 50,
+                distanceKm: hr.distanceKm,
+              })),
               reliefCamps: nearbyRes.reliefCamps.map((rc) => ({
                 id: rc._id,
                 type: 'reliefCamp',
@@ -600,7 +662,7 @@ function DisasterMapPage() {
               className={`map-filter-btn ${showHazards ? 'active-hazard' : ''}`}
               onClick={() => setShowHazards((prev) => !prev)}
             >
-              ⚠️ Hazard Zones ({mapData.hazardZones.length})
+              ⚠️ Hazards ({mapData.hazardZones.length + (mapData.hazardReports?.length || 0)})
             </button>
             <button
               type="button"

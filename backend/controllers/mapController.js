@@ -1,6 +1,7 @@
 const SOSRequest = require('../models/SOSRequest');
 const Shelter = require('../models/Shelter');
 const HazardZone = require('../models/HazardZone');
+const HazardReport = require('../models/HazardReport');
 const ReliefCamp = require('../models/ReliefCamp');
 
 const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
@@ -24,6 +25,7 @@ const getAllMapData = async (req, res) => {
     const sosFilter = { status: { $nin: ['Cancelled'] } };
     const shelterFilter = {};
     const hazardFilter = { status: { $in: ['Active', 'Warning', 'Monitored'] } };
+    const crowdHazardFilter = { status: { $in: ['Pending', 'Community Verified', 'Verified'] } };
     const reliefFilter = { status: { $in: ['Active', 'Depleted'] } };
 
     if (status && status !== 'All') {
@@ -33,10 +35,11 @@ const getAllMapData = async (req, res) => {
       sosFilter['location.district'] = new RegExp(district, 'i');
       shelterFilter['location.district'] = new RegExp(district, 'i');
       hazardFilter['location.district'] = new RegExp(district, 'i');
+      crowdHazardFilter['location.district'] = new RegExp(district, 'i');
       reliefFilter['location.district'] = new RegExp(district, 'i');
     }
 
-    const [sosList, shelterList, hazardList, reliefList] = await Promise.all([
+    const [sosList, shelterList, hazardList, crowdHazardList, reliefList] = await Promise.all([
       SOSRequest.find(sosFilter)
         .populate('victim', 'name email')
         .populate('assignedVolunteer', 'name email')
@@ -44,6 +47,10 @@ const getAllMapData = async (req, res) => {
         .lean(),
       Shelter.find(shelterFilter).lean(),
       HazardZone.find(hazardFilter).sort({ severity: 1, createdAt: -1 }).lean(),
+      HazardReport.find(crowdHazardFilter)
+        .populate('reporter', 'name role trustScore')
+        .sort({ credibilityScore: -1, createdAt: -1 })
+        .lean(),
       ReliefCamp.find(reliefFilter).sort({ createdAt: -1 }).lean(),
     ]);
 
@@ -130,6 +137,31 @@ const getAllMapData = async (req, res) => {
         notes: rc.notes || '',
       }));
 
+    const crowdHazardMarkers = crowdHazardList
+      .filter((hr) => hr.location?.latitude && hr.location?.longitude)
+      .map((hr) => ({
+        id: hr._id,
+        type: 'hazardReport',
+        lat: hr.location.latitude,
+        lng: hr.location.longitude,
+        title: hr.title,
+        hazardType: hr.hazardType,
+        severity: hr.severity,
+        status: hr.status,
+        waterDepthFeet: hr.waterDepthFeet || 0,
+        roadPassable: Boolean(hr.roadPassable),
+        address: hr.location.address || '',
+        district: hr.location.district || '',
+        description: hr.description || '',
+        photoUrl: hr.photoUrl || null,
+        credibilityScore: hr.credibilityScore ?? 50,
+        upvoteCount: (hr.upvotes || []).length,
+        verificationCount: (hr.verifications || []).length,
+        reporterName: hr.reporter?.name || hr.reporterName || 'Citizen',
+        reporterTrustScore: hr.reporter?.trustScore ?? hr.reporterTrustSnapshot ?? 50,
+        createdAt: hr.createdAt,
+      }));
+
     const stats = {
       totalSOS: sosMarkers.length,
       criticalSOS: sosMarkers.filter((s) => s.priorityScore >= 70).length,
@@ -137,7 +169,8 @@ const getAllMapData = async (req, res) => {
       pendingSOS: sosMarkers.filter((s) => s.status === 'Pending').length,
       totalShelters: shelterMarkers.length,
       availableShelterSpots: shelterMarkers.reduce((sum, s) => sum + s.availableSpots, 0),
-      activeHazards: hazardMarkers.length,
+      activeHazards: hazardMarkers.length + crowdHazardMarkers.length,
+      crowdsourcedHazards: crowdHazardMarkers.length,
       activeReliefCamps: reliefMarkers.length,
     };
 
@@ -148,6 +181,7 @@ const getAllMapData = async (req, res) => {
         sosRequests: sosMarkers,
         shelters: shelterMarkers,
         hazardZones: hazardMarkers,
+        hazardReports: crowdHazardMarkers,
         reliefCamps: reliefMarkers,
       },
     });
@@ -287,7 +321,33 @@ const getNearbyMapData = async (req, res) => {
       queries.push(Promise.resolve([]));
     }
 
-    const [nearbySOS, nearbyShelters, nearbyHazards, nearbyReliefCamps] = await Promise.all(queries);
+    if (!typeFilter || typeFilter.includes('hazards') || typeFilter.includes('hazard') || typeFilter.includes('hazardreports')) {
+      queries.push(
+        HazardReport.find({
+          status: { $in: ['Pending', 'Community Verified', 'Verified'] },
+          'location.coordinates': {
+            $near: {
+              $geometry: point,
+              $maxDistance: radiusMeters,
+            },
+          },
+        })
+          .populate('reporter', 'name role trustScore')
+          .limit(50)
+          .lean()
+          .then((docs) =>
+            docs.map((doc) => ({
+              ...doc,
+              entityType: 'hazardReport',
+              distanceKm: calculateDistanceKm(latNum, lngNum, doc.location.latitude, doc.location.longitude),
+            }))
+          )
+      );
+    } else {
+      queries.push(Promise.resolve([]));
+    }
+
+    const [nearbySOS, nearbyShelters, nearbyHazards, nearbyReliefCamps, nearbyHazardReports] = await Promise.all(queries);
 
     return res.status(200).json({
       success: true,
@@ -295,12 +355,13 @@ const getNearbyMapData = async (req, res) => {
         center: { latitude: latNum, longitude: lngNum },
         radiusKm,
         totalFound:
-          nearbySOS.length + nearbyShelters.length + nearbyHazards.length + nearbyReliefCamps.length,
+          nearbySOS.length + nearbyShelters.length + nearbyHazards.length + nearbyReliefCamps.length + nearbyHazardReports.length,
       },
       data: {
         sosRequests: nearbySOS,
         shelters: nearbyShelters,
         hazardZones: nearbyHazards,
+        hazardReports: nearbyHazardReports,
         reliefCamps: nearbyReliefCamps,
       },
     });

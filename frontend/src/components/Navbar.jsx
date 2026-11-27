@@ -154,6 +154,22 @@ function Navbar() {
             </Link>
 
             <Link
+              to="/hazards"
+              style={{
+                ...styles.authLink,
+                fontSize: '0.85rem',
+                padding: '0.35rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                background: 'rgba(245,158,11,0.22)',
+                fontWeight: 700,
+              }}
+            >
+              ⚠️ Hazards
+            </Link>
+
+            <Link
               to="/profile"
               style={{
                 ...styles.authLink,

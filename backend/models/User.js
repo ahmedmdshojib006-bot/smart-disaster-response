@@ -64,6 +64,20 @@ const userSchema = new mongoose.Schema({
     default: '',
   },
 
+  trustScore: {
+    type: Number,
+    default: 50,
+    min: 0,
+    max: 100,
+  },
+
+  hazardStats: {
+    reportsSubmitted: { type: Number, default: 0, min: 0 },
+    reportsVerified: { type: Number, default: 0, min: 0 },
+    reportsFlaggedFake: { type: Number, default: 0, min: 0 },
+    verificationsCast: { type: Number, default: 0, min: 0 },
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

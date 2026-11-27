@@ -20,6 +20,7 @@ import SheltersPage from './pages/SheltersPage.jsx';
 import DisasterMapPage from './pages/DisasterMapPage.jsx';
 import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
 import HouseholdQRPage from './pages/HouseholdQRPage.jsx';
+import HazardReportsPage from './pages/HazardReportsPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -205,6 +206,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['Admin', 'NGO', 'Volunteer', 'Citizen']}>
             <HouseholdQRPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hazards"
+        element={
+          <ProtectedRoute>
+            <HazardReportsPage />
           </ProtectedRoute>
         }
       />

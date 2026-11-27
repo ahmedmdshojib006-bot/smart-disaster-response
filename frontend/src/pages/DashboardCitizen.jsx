@@ -105,6 +105,48 @@ function DashboardCitizen() {
           </div>
         </div>
 
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #78350f 0%, #b45309 100%)',
+            color: '#fff',
+            borderRadius: '12px',
+            padding: '1.35rem 1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 12px rgba(180,83,9,0.22)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div>
+            <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.76rem', fontWeight: 700 }}>
+              Crowdsourced Safety Network
+            </span>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0.45rem 0 0.25rem 0', color: '#ffffff' }}>
+              ⚠️ Report Flooded Roads, Broken Bridges & Verify Local Hazards
+            </h2>
+            <p style={{ opacity: 0.92, fontSize: '0.88rem', maxWidth: '640px', margin: 0, color: '#fef3c7' }}>
+              Upload hazard photos with GPS pins, upvote or verify neighbor alerts, and build your community Trust Score.
+            </p>
+          </div>
+          <Link
+            to="/hazards"
+            style={{
+              backgroundColor: '#ffffff',
+              color: '#92400e',
+              padding: '0.65rem 1.3rem',
+              borderRadius: '8px',
+              fontWeight: 800,
+              textDecoration: 'none',
+              fontSize: '0.92rem',
+            }}
+          >
+            ⚠️ Open Hazard Reports →
+          </Link>
+        </div>
+
         <div ref={formRef}>
           <SOSRequestForm onSOSSubmitted={handleSOSSubmitted} />
         </div>
