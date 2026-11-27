@@ -19,6 +19,7 @@ import AdminAlertSender from './pages/AdminAlertSender.jsx';
 import SheltersPage from './pages/SheltersPage.jsx';
 import DisasterMapPage from './pages/DisasterMapPage.jsx';
 import ResourceManagementPage from './pages/ResourceManagementPage.jsx';
+import HazardReportsPage from './pages/HazardReportsPage.jsx';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -195,6 +196,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ResourceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hazards"
+        element={
+          <ProtectedRoute>
+            <HazardReportsPage />
           </ProtectedRoute>
         }
       />
