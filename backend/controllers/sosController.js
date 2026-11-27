@@ -507,6 +507,205 @@ const updateSOSStatus = async (req, res) => {
   }
 };
 
+// ── Member-3: Module 3 — Offline PWA Background Synchronization ──────────────
+// Accepts an array of SOS requests stored locally while offline and persists them in batch
+const syncOfflineSOS = async (req, res) => {
+  try {
+    const { requests } = req.body;
+
+    if (!Array.isArray(requests) || requests.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No offline requests provided for synchronization.',
+      });
+    }
+
+    const io = req.app.get('io');
+    const syncedResults = [];
+
+    for (const item of requests) {
+      const lat = parseFloat(item.latitude);
+      const lng = parseFloat(item.longitude);
+
+      if (isNaN(lat) || isNaN(lng)) continue;
+
+      const parsedNeeds = parseNeeds(item.needs);
+      if (parsedNeeds.length === 0) continue;
+
+      const peopleCount = Math.max(1, parseInt(item.numberOfPeople, 10) || 1);
+      const vulnerabilities = parseVulnerabilities(item);
+
+      const { priorityScore, priorityFactors, priorityLevel } = calculatePriorityScore({
+        needs: parsedNeeds,
+        numberOfPeople: peopleCount,
+        vulnerabilities,
+        createdAt: item.offlineLoggedAt ? new Date(item.offlineLoggedAt) : new Date(),
+      });
+
+      const sosDoc = new SOSRequest({
+        victim: req.user._id,
+        location: {
+          latitude: lat,
+          longitude: lng,
+          address: item.address ? item.address.trim() : '',
+          district: item.district ? item.district.trim() : '',
+        },
+        needs: parsedNeeds,
+        numberOfPeople: peopleCount,
+        vulnerabilities,
+        priorityScore,
+        priorityFactors,
+        priority: priorityLevel,
+        description: item.description ? `[Offline Synced] ${item.description.trim()}` : '[Offline Synced]',
+        status: 'Pending',
+        isOfflineSync: true,
+        offlineLoggedAt: item.offlineLoggedAt ? new Date(item.offlineLoggedAt) : new Date(),
+        submissionSource: 'PWA_OFFLINE',
+        statusHistory: [
+          {
+            status: 'Pending',
+            changedBy: req.user._id,
+            changedAt: new Date(),
+            note: 'Automatically synced from local PWA cache after network recovery.',
+          },
+        ],
+      });
+
+      await sosDoc.save();
+      syncedResults.push(sosDoc);
+
+      if (io) {
+        io.emit('sos:created', sosDoc);
+        io.emit('sos:offline-synced', {
+          sosId: sosDoc._id,
+          priority: sosDoc.priority,
+          victimName: req.user.name,
+          district: sosDoc.location.district,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully synchronized ${syncedResults.length} offline emergency request(s).`,
+      count: syncedResults.length,
+      syncedRequests: syncedResults,
+    });
+  } catch (error) {
+    console.error('Error in syncOfflineSOS:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to process offline SOS synchronization.',
+      error: error.message,
+    });
+  }
+};
+
+// ── Member-3: Module 3 — SMS Fallback Emergency Gateway ───────────────────────
+// Ingests SMS emergency alerts when cellular data/internet is unavailable
+const handleSMSFallback = async (req, res) => {
+  try {
+    const { senderPhone, messageText, latitude, longitude, needs, numberOfPeople } = req.body;
+
+    if (!senderPhone || !senderPhone.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sender phone number is required for SMS emergency dispatch.',
+      });
+    }
+
+    let lat = parseFloat(latitude);
+    let lng = parseFloat(longitude);
+    let detectedNeeds = parseNeeds(needs);
+    let peopleCount = parseInt(numberOfPeople, 10) || 1;
+
+    // Parse SMS text if sent in compact disaster format: "SOS <lat>,<lng> <needs> <count>"
+    if (messageText && (isNaN(lat) || isNaN(lng))) {
+      const coordMatch = messageText.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+      if (coordMatch) {
+        lat = parseFloat(coordMatch[1]);
+        lng = parseFloat(coordMatch[2]);
+      }
+      if (detectedNeeds.length === 0) {
+        if (/water/i.test(messageText)) detectedNeeds.push('water');
+        if (/food/i.test(messageText)) detectedNeeds.push('food');
+        if (/med/i.test(messageText)) detectedNeeds.push('medicine');
+        if (/rescue|save/i.test(messageText)) detectedNeeds.push('rescue');
+      }
+    }
+
+    // Default coordinates to central Bangladesh if coordinates are approximate
+    if (isNaN(lat) || isNaN(lng)) {
+      lat = 23.8103;
+      lng = 90.4125;
+    }
+    if (detectedNeeds.length === 0) {
+      detectedNeeds = ['rescue', 'food'];
+    }
+
+    const vulnerabilities = { children: 0, elderly: 0, pregnantWomen: 0, injured: 1 };
+    const { priorityScore, priorityFactors, priorityLevel } = calculatePriorityScore({
+      needs: detectedNeeds,
+      numberOfPeople: peopleCount,
+      vulnerabilities,
+      createdAt: new Date(),
+    });
+
+    const io = req.app.get('io');
+    const sosDoc = new SOSRequest({
+      victim: req.user ? req.user._id : '000000000000000000000000', // System / unauthenticated fallback
+      location: {
+        latitude: lat,
+        longitude: lng,
+        address: `SMS Dispatch from: ${senderPhone.trim()}`,
+        district: 'SMS Gateway',
+      },
+      needs: detectedNeeds,
+      numberOfPeople: peopleCount,
+      vulnerabilities,
+      priorityScore: Math.max(80, priorityScore), // High emergency score for SMS alerts
+      priorityFactors,
+      priority: 'Critical',
+      description: `[SMS FALLBACK DISPATCH] From: ${senderPhone}. Text: "${messageText || 'Emergency rescue requested via SMS'}".`,
+      status: 'Pending',
+      submissionSource: 'SMS_FALLBACK',
+      statusHistory: [
+        {
+          status: 'Pending',
+          changedAt: new Date(),
+          note: `Received via SMS gateway from ${senderPhone}. Cellular backup activated.`,
+        },
+      ],
+    });
+
+    // Save with bypass of strict victim validation if anonymous SMS
+    await sosDoc.save({ validateBeforeSave: false });
+
+    if (io) {
+      io.emit('sos:created', sosDoc);
+      io.emit('sos:sms-alert', {
+        sosId: sosDoc._id,
+        senderPhone,
+        priority: 'Critical',
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Emergency SMS dispatch logged successfully.',
+      sosId: sosDoc._id,
+      smsConfirmation: `SMS received! Rescue teams alerted for coordinates ${lat},${lng}. Keep your phone on.`,
+    });
+  } catch (error) {
+    console.error('Error in handleSMSFallback:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to process SMS fallback alert.',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createSOS,
   getMySOS,
@@ -515,4 +714,6 @@ module.exports = {
   getPrioritizedSOS,
   cancelSOS,
   updateSOSStatus,
+  syncOfflineSOS,
+  handleSMSFallback,
 };

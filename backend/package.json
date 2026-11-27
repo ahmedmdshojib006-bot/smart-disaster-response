@@ -12,6 +12,7 @@
     "seed:resources": "node scripts/seedResources.js",
     "seed:households": "node scripts/seedHouseholds.js",
     "seed:hazards": "node scripts/seedHazardReports.js",
+    "seed:missing": "node scripts/seedMissingPersons.js",
     "test": "jest --runInBand --forceExit"
   },
   "dependencies": {

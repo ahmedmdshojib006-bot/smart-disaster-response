@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axiosInstance from '../api/axiosInstance.js';
 import { calculatePriorityScoreClient } from '../utils/priorityCalculatorClient.js';
+import { saveOfflineSOS, generateSMSFallbackURI } from '../utils/offlineSyncManager.js';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -45,6 +46,7 @@ function SOSRequestForm({ onSOSSubmitted }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [offlineSavedItem, setOfflineSavedItem] = useState(null);
 
   const priorityCalculation = useMemo(() => {
     return calculatePriorityScoreClient({
@@ -282,7 +284,49 @@ function SOSRequestForm({ onSOSSubmitted }) {
       return;
     }
 
+    const handleOfflineSubmission = () => {
+      const payload = {
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        address,
+        district,
+        numberOfPeople,
+        description,
+        needs: selectedNeeds,
+        vulnerabilities: {
+          children: childrenCount,
+          elderly: elderlyCount,
+          pregnantWomen: pregnantCount,
+          injured: injuredCount,
+        },
+        priorityScore: priorityCalculation.score,
+        priority: priorityCalculation.priority,
+      };
+
+      const saved = saveOfflineSOS(payload);
+      setOfflineSavedItem(saved);
+      setSuccessMsg(
+        `📶 Saved Offline! No internet connection available. Your SOS request has been safely stored locally and will automatically sync once your connection is restored.`
+      );
+      window.dispatchEvent(new Event('offline-sos-queued'));
+
+      setDescription('');
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      setNumberOfPeople(1);
+      setChildrenCount(0);
+      setElderlyCount(0);
+      setPregnantCount(0);
+      setInjuredCount(0);
+    };
+
+    if (!navigator.onLine) {
+      handleOfflineSubmission();
+      return;
+    }
+
     setSubmitting(true);
+    setOfflineSavedItem(null);
 
     try {
       const formData = new FormData();
@@ -336,8 +380,12 @@ function SOSRequestForm({ onSOSSubmitted }) {
         }
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to submit SOS request.';
-      setErrorMsg(msg);
+      if (!navigator.onLine || !err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        handleOfflineSubmission();
+      } else {
+        const msg = err.response?.data?.message || err.message || 'Failed to submit SOS request.';
+        setErrorMsg(msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -375,32 +423,73 @@ function SOSRequestForm({ onSOSSubmitted }) {
       {successMsg && (
         <div
           style={{
-            background: '#f0fdf4',
-            color: '#15803d',
-            border: '2px solid #86efac',
-            padding: '1rem 1.4rem',
+            background: offlineSavedItem ? '#fffbeb' : '#f0fdf4',
+            color: offlineSavedItem ? '#92400e' : '#15803d',
+            border: offlineSavedItem ? '2px solid #fde68a' : '2px solid #86efac',
+            padding: '1.1rem 1.4rem',
             borderRadius: '10px',
             marginBottom: '1.5rem',
           }}
         >
-          <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.3rem' }}>
+          <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.4rem' }}>
             {successMsg}
           </div>
-          <div style={{ fontSize: '0.88rem', color: '#166534', marginTop: '0.3rem' }}>
-            Current Status:{' '}
-            <strong
-              style={{
-                background: '#fef3c7',
-                color: '#92400e',
-                padding: '0.2rem 0.6rem',
-                borderRadius: 12,
-                border: '1px solid #fde68a',
-              }}
-            >
-              ⏳ PENDING VERIFICATION
-            </strong>{' '}
-            — Your emergency signal is live on the Disaster Map.
-          </div>
+          {offlineSavedItem ? (
+            <div style={{ fontSize: '0.88rem', color: '#78350f', marginTop: '0.4rem' }}>
+              <div style={{ marginBottom: '0.6rem' }}>
+                Storage Status:{' '}
+                <strong
+                  style={{
+                    background: '#fed7aa',
+                    color: '#9a3412',
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: 12,
+                    border: '1px solid #fdba74',
+                  }}
+                >
+                  📶 QUEUED LOCALLY (OFFLINE)
+                </strong>{' '}
+                — Temp ID: <code style={{ fontSize: '0.8rem', background: '#fef3c7', padding: '0.1rem 0.3rem', borderRadius: 4 }}>{offlineSavedItem.tempId}</code>
+              </div>
+              <p style={{ margin: '0.3rem 0 0.8rem 0', fontSize: '0.84rem' }}>
+                In an active crisis with no internet access? You can immediately trigger a 2G SMS emergency dispatch using your mobile carrier network:
+              </p>
+              <a
+                href={generateSMSFallbackURI(offlineSavedItem)}
+                className="btn-danger"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 1.2rem',
+                  background: '#dc2626',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                }}
+              >
+                <span>📱</span> Open 2G SMS Fallback Dispatch (To 999)
+              </a>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.88rem', color: '#166534', marginTop: '0.3rem' }}>
+              Current Status:{' '}
+              <strong
+                style={{
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: 12,
+                  border: '1px solid #fde68a',
+                }}
+              >
+                ⏳ PENDING VERIFICATION
+              </strong>{' '}
+              — Your emergency signal is live on the Disaster Map.
+            </div>
+          )}
         </div>
       )}
 

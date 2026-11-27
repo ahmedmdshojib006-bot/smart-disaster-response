@@ -8,14 +8,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 1.5rem',
-    height: '60px',
+    flexWrap: 'wrap',
+    padding: '0.45rem 1.5rem',
+    minHeight: '60px',
     backgroundColor: '#1a237e',  
     color: '#ffffff',
     boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     position: 'sticky',
     top: 0,
-    zIndex: 1000, 
+    zIndex: 1000,
+    gap: '0.6rem',
   },
   brand: {
     fontSize: '1.2rem',
@@ -27,7 +29,8 @@ const styles = {
   rightSection: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
+    flexWrap: 'wrap',
+    gap: '0.55rem',
   },
   userName: {
     fontSize: '0.9rem',
@@ -167,6 +170,22 @@ function Navbar() {
               }}
             >
               ⚠️ Hazards
+            </Link>
+
+            <Link
+              to="/missing-persons"
+              style={{
+                ...styles.authLink,
+                fontSize: '0.85rem',
+                padding: '0.35rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                background: 'rgba(255,255,255,0.18)',
+                fontWeight: 700,
+              }}
+            >
+              👥 Missing Persons
             </Link>
 
             <Link
