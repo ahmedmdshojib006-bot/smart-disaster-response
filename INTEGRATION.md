@@ -613,3 +613,167 @@ Fetch distribution audit records with filtering. **Requires Auth.**
 - Query params: `resourceId`, `category`, `district`, `recipientType`, `limit`
 
 
+
+---
+
+## Module 3: Community Engagement & Safety Network (Member-3)
+
+### Overview
+Authored and maintained by **Minhaz Chowdhury (Member-3, Student ID: 241-35-166)**.
+This module delivers two lifelines for disaster victims, families, and rescue coordination teams during severe natural disasters (flash floods, cyclones):
+1. **Missing Persons & Community Reunification Board:** A community-driven board where families can report missing relatives with photos and physical features, and volunteers or shelter coordinators can register individuals as "Found / Safe", automatically linking them to registered rescue shelters.
+2. **Offline SOS Emergency Dispatch & Progressive Web App (PWA):** Offline service-worker-cached SOS reporting with client-side urgency calculations, local storage queueing, automatic background syncing when internet reconnects, and 2G cellular SMS fallback emergency dispatch.
+
+---
+
+### 1. Missing Persons & Community Reunification Board (`/api/missing-persons`)
+
+#### GET `/api/missing-persons`
+Fetch paginated list of missing or found persons with optional filtering and text search. **Public.**
+- **Query Parameters:**
+  - `status`: Filter by status (`Missing`, `Found / Safe`, `Deceased`). Default: `Missing`
+  - `district`: Filter by last seen district (e.g. `Feni`, `Sylhet`, `Noakhali`)
+  - `gender`: Filter by gender (`Male`, `Female`, `Child`, `Other`)
+  - `search`: Keyword search matching `fullName`, `lastSeenLocation.landmark`, or `physicalDescription`
+  - `page`: Page number (default: 1)
+  - `limit`: Records per page (default: 20)
+- **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "count": 6,
+    "total": 6,
+    "page": 1,
+    "pages": 1,
+    "data": [
+      {
+        "_id": "66f3a123...",
+        "fullName": "Mohammad Rafiqul Islam",
+        "age": 45,
+        "gender": "Male",
+        "status": "Missing",
+        "lastSeenLocation": {
+          "district": "Feni",
+          "area": "Parshuram",
+          "landmark": "Near Muhuri River Embankment"
+        },
+        "physicalDescription": "Height 5ft 6in, wearing green lungi and white genji.",
+        "medicalNeeds": "Diabetic patient requiring regular insulin.",
+        "contactPerson": {
+          "name": "Salma Begum",
+          "phone": "01712345678",
+          "relationship": "Spouse"
+        },
+        "photoUrl": "https://..."
+      }
+    ]
+  }
+  ```
+
+#### GET `/api/missing-persons/stats/overview`
+Aggregated community reunification KPI statistics. **Public.**
+- **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "stats": {
+      "totalReported": 42,
+      "currentlyMissing": 29,
+      "foundSafe": 13,
+      "reunificationRate": "31.0%"
+    }
+  }
+  ```
+
+#### GET `/api/missing-persons/:id`
+Retrieve detailed profile of a specific missing person. **Public.**
+
+#### POST `/api/missing-persons`
+Submit a new missing person report. **Requires Auth.**
+- **Content-Type:** `multipart/form-data`
+- **Fields:**
+  - `fullName` (required, string)
+  - `age` (required, number)
+  - `gender` (required: `Male` | `Female` | `Child` | `Other`)
+  - `district` (required, string)
+  - `landmark` (required, string)
+  - `upazila` (optional, string)
+  - `physicalDescription` (optional, string)
+  - `medicalNeeds` (optional, string)
+  - `contactName` (required, string)
+  - `contactPhone` (required, string)
+  - `contactRelationship` (required, string)
+  - `contactAltPhone` (optional, string)
+  - `photo` (optional image file upload via Multer)
+- **Real-Time Notification:** Emits Socket.IO event `missing_person:reported` to all connected clients.
+
+#### PUT `/api/missing-persons/:id/safe`
+Mark a missing person as "Found / Safe" and link to an emergency shelter. **Requires Auth.**
+- **Payload:**
+  ```json
+  {
+    "currentLocation": "Feni Central Primary School Shelter, Room 102",
+    "shelterId": "66e5678...",
+    "safetyNotes": "Rescued safely by Army speedboat; in good health."
+  }
+  ```
+- **Real-Time Notification:** Emits Socket.IO event `missing_person:marked_safe`.
+
+---
+
+### 2. Offline SOS Emergency Dispatch & SMS Fallback Gateway (`/api/sos`)
+
+#### POST `/api/sos/sync-offline`
+Batch synchronization endpoint for emergency SOS requests created while offline via PWA / Service Worker. **Requires Auth or Guest Session.**
+- **Payload:**
+  ```json
+  {
+    "requests": [
+      {
+        "latitude": 23.0159,
+        "longitude": 91.3976,
+        "address": "Parshuram Embankment",
+        "district": "Feni",
+        "needs": ["rescue", "water"],
+        "numberOfPeople": 4,
+        "vulnerabilities": {
+          "children": 2,
+          "elderly": 1,
+          "pregnantWomen": 0,
+          "injured": 0
+        },
+        "description": "Water rising above rooftop.",
+        "offlineLoggedAt": "2026-10-14T08:30:00.000Z"
+      }
+    ]
+  }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "Successfully synchronized 1 offline SOS emergency requests.",
+    "count": 1,
+    "syncedIds": ["66fa1234..."]
+  }
+  ```
+
+#### POST `/api/sos/sms-fallback`
+Cellular gateway handler for SMS-based SOS dispatches when mobile data / broadband networks are down.
+- **Payload:**
+  ```json
+  {
+    "senderPhone": "01711223344",
+    "messageBody": "EMERGENCY SOS! GPS:23.0159,91.3976 (Feni). Need:rescue,water. Ppl:4. Vuln:2 kids. Tel:01711223344"
+  }
+  ```
+- **Response (201 Created):**
+  ```json
+  {
+    "success": true,
+    "message": "SMS Fallback SOS processed and dispatched to emergency rescue board.",
+    "sosId": "66fa5678...",
+    "priorityScore": 79,
+    "priority": "Critical"
+  }
+  ```
